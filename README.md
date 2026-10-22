@@ -144,6 +144,6 @@ This project uses the [MIT License](./LICENSE). Referenced third-party materials
 
 ## About Me
 
-Author: 美名 Neo, an independent developer focused on practical AI.
+Author: Neo, an independent developer focused on practical AI.
 
 If you need help learning or applying AI, feel free to get in touch!
