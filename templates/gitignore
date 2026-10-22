@@ -3,3 +3,6 @@ node_modules/
 .learnings/
 dist/
 build/
+
+acceptance-report.json
+.publisher-pilot/

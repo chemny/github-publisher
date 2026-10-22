@@ -1,94 +1,40 @@
-# Pre-publish Flow
+# Default Publication Flow
 
-For identity/attribution confirmation, [review-decisions.md](review-decisions.md) takes precedence over blanket “ask the user” instructions below: reuse unchanged scoped explicit approvals and ask only about new/changed findings. Reuse is not publication authorization; a current publication hold must be respected.
+This is the routing authority for ordinary releases. Detailed writing, engineering and acceptance references are conditional procedures, not a mandatory chain. Explicit user restrictions and [authorization.md](authorization.md) always apply; reuse unchanged identity/attribution decisions through [review-decisions.md](review-decisions.md), never as publication approval.
 
-Use this flow before publishing a new skill repository or pushing an update to an existing public skill repository.
+## Short default
 
-## README preparation and acceptance
+1. **Understand the request and change.** Identify project type, release target, diff and existing project-required checks. Read enough to understand what is being published; do not perform a comprehensive diagnosis by default. Keep existing useful project layout, license and README languages unless a relevant change or explicit instruction requires work.
+2. **Check what matters to this release.** Review the actual delivery/staged/tracked content for secrets, private/local-only files, missing required files, material rights/identity issues and new hidden dependencies. Check affected documentation, links and approved preview scope; a code-only update need not rewrite a correct README or regenerate an unchanged approved visual. Run existing mandatory checks and affected native tests, after reviewing side effects and execution authorization. Reuse relevant evidence only for unchanged inputs/environment; rerun affected checks after edits. A normal app/library/CLI does not inherit Skill layout or Publisher's own README framework. The bundled publish-check is Skill-oriented: use it where applicable, not as a universal project gate. A known applicable failure stays blocking; the short flow must not waive it.
+3. **Final Pre-publish Summary: show one concrete summary and wait.** Include the GitHub account and permission, Git author/name/email when commits are involved, existing license or unresolved rights, repository URL, branch, visibility, exact commits/change summaries, candidate digest, requested remote actions, relevant check outcomes and material untested scope. Reuse unchanged confirmed facts; do not ask the same identity questions again. User acceptance of limitations must be explicit and cannot waive secrets, ownership or authorization blockers. If no final commit list is ready, prepare it as authorized before asking for push confirmation. Never request tokens in chat.
+4. **Publish to GitHub only for the confirmed scope, then verify.** After explicit human confirmation of that summary, execute only listed actions, then verify remote commits/content, visibility and metadata as relevant. Push permission does not include an unlisted tag/Release. Changed content, target or actions require renewed confirmation; a hold takes precedence. An inspect/edit-only request never reaches remote execution.
 
-Use [readme-style.md](readme-style.md) as the single framework authority. Before writing, establish an evidence-based product brief with main/supporting tasks and a representative first use; inspect actual capabilities, required versus optional dependencies, user inputs, complete sub-Skill inventory, installation contents, files, rights and available approved visuals. Resolve missing consequential facts rather than inventing them.
+No minimum number of commands or test runs is required. Keep one concise result; do not generate a separate engineering scorecard, cost report or rubric for an ordinary release. No automatic external evaluator, other Skill, installation or auxiliary Agent.
 
-Write the current product introduction under the default ten-section framework, with Preview second and About Me last. As allowed by readme-style.md, a labelled generated capability illustration may be folded into Overview without a separate Preview heading; keep the remaining section order and duties. Keep history, upgrades, migrations and internal development records in other documents. For updates, change current product facts rather than appending a version announcement to the README.
+## Optional subprocesses
 
-Review both languages for information completeness and reader understanding, then run available objective checks. Report semantic conclusions separately from checker PASS/WARNING/FAIL and engineering scores. If templates or automation still reflect older rules, manually check against the authority and disclose the coverage gap.
+| Subprocess | Trigger | Boundary / return |
+|---|---|---|
+| Understand / engineering diagnosis | User asks, or a concrete consequential issue needs diagnosis | Read relevant `project-analysis.md`; isolate the issue, report evidence and a scoped remedy, then return. Do not conduct a whole-project audit for a minor concern. |
+| Performance / Token measurement | User explicitly requests it, or agrees to a proposed measurement of an observed bottleneck | Define inputs, quality requirements, available metrics and a small budget first. Record cached/noncached input, output and elapsed time only when available; unknown stays unknown. No automatic repeated A/B or money-saving claims. |
+| Optimization and regression | A worthwhile issue is identified and changes are authorized | Preserve the original/user edits; fix the selected issue, run the same relevant checks, measure if benefit is claimed and retain/revert based on evidence. No unrelated rewrite or automatic installation. |
+| Fresh installation / full acceptance | Installation method, delivery contents, dependencies or core flow materially change; a support claim expands; or user/project explicitly requires it | Use `acceptance.md` only for applicable scope. Once selected, required failures/unknowns stay unresolved; never relabel an old required failure as optional to release. |
+| Compatibility review | A change affects platform behavior or support claims, or user/project requires it | Use `platform-compatibility.md` for declared/affected platforms. Do not automatically test all clients/OS for a documentation-only update. Never claim untested support. |
+| README / preview preparation | Documentation/material is missing, misleading, affected by the change, or explicitly requested | Read the relevant writing/visual section of `publishing-workflow.md`; preserve approved unchanged material and project-appropriate conventions. |
 
-For a controlled before/after writing evaluation, first agree dimensions and a 10-point rubric, preserve the original and revised case outputs and source evidence, then score both against the same rubric. Do not generate or score a comparative result before its proposal and dimensions are agreed. This writing review does not authorize publication.
-
-Follow [readme-review.md](readme-review.md) and fill [the internal review record](../templates/readme-review-record.md). Establish facts with current file/line evidence, handle missing author/visual facts without filler, freeze any comparison rubric before edits, and review the ten reader questions plus first-use text walkthrough before automated checks. Keep review fields out of public prose.
-
-## Flow
+Before a selected subprocess starts, briefly state its problem, scope, expected work/cost and stop point. Request permission only for work not already authorized. A subflow result returns here; it does not trigger the next subflow automatically. If evidence is insufficient, stop that work and report the gap rather than expanding it indefinitely.
 
 ```mermaid
 flowchart TD
-    A["Start: publish or update skill"] --> B["Inspect Repo<br/>Check directory, Git status, remote, branch"]
-    B --> B1["Understand Product, Prepare Facts and Resolve Gaps<br/>Core purpose, principal tasks, source evidence, approved decisions, frozen rubric"]
-    B1 --> C0["Choose Preview<br/>Actual screenshots/cases first<br/>Otherwise generated workflow and pain-point illustration"]
-    C0 --> C["Classify Files<br/>Core files, templates, references, scripts, drafts, caches, generated output"]
-    C --> D["Cleanup Plan<br/>List suggested deletion, redaction, .gitignore updates, or files to keep"]
-    D --> E{"Deletion, redaction,<br/>move, or high-risk cleanup?"}
-    E -- "Yes" --> F["Ask user to confirm cleanup"]
-    E -- "No" --> G["Gitignore / Env Check"]
-    F --> G
-    G["Gitignore / Env Check<br/>Check .gitignore, .env, .env.example, tracked files"] --> H["Generate / Finalize README<br/>Complete README.md and README.zh.md"]
-    H --> H1["Semantic Review and First-use Text Walkthrough<br/>Ten reader questions, natural writing, local evidence record"]
-    H1 --> H2{"Material facts, readable first use and three manual product-fit gates resolved?"}
-    H2 -- "No" --> H
-    H2 -- "Yes" --> I0["Smoke Test<br/>Run scripts/smoke-test.mjs when available"]
-    I0 --> I["Automated Publish Check<br/>Run scripts/publish-check.mjs when available"]
-    I --> J{"Result"}
-    J -- "FAIL" --> K["Fix blocking issues<br/>Secrets, local paths, missing files, private hard dependencies"]
-    K --> I
-    J -- "WARNING" --> L["Record warnings"]
-    J -- "PASS" --> M["Skill Completeness Check"]
-    L --> M
-    M["Skill Completeness Check<br/>SKILL.md, README, LICENSE, references, templates"] --> N{"Can publish as<br/>an independent skill?"}
-    N -- "No" --> O["Fix missing files, broken references, or hard dependencies"]
-    O --> I
-    N -- "Yes" --> P["Compatibility Check<br/>Codex, Claude Code"]
-    P --> Q{"Compatibility risk?"}
-    Q -- "Yes" --> R["Report risk and options"]
-    Q -- "No" --> S["Final Pre-publish Summary"]
-    R --> S
-    S["Final Pre-publish Summary<br/>Target, files, README, screenshot preview, security, completeness, dependencies, compatibility, metadata, risks"] --> A1{"Explicit publish authorization<br/>already exists?"}
-    A1 -- "Yes" --> V["Commit confirmed files only"]
-    A1 -- "No" --> T{"Ask user:<br/>Publish to GitHub?"}
-    T -- "No" --> U["Stop publishing<br/>Keep local results"]
-    T -- "Yes" --> V
-    V --> W["Publish / Push"]
-    W --> X["Verify URL, branch, remote, description, clean worktree"]
-    X --> Y["Done"]
+    A[Understand request and diff] --> B[Relevant release checks]
+    B --> C{Concrete need for deeper work?}
+    C -->|No| D[Show account, exact scope and check results]
+    C -->|Yes, authorized| E[Run only the selected subprocess]
+    E --> B
+    B -->|Applicable blocker| H[Stop and report blocker]
+    D --> F{Explicit confirmation of unchanged scope?}
+    F -->|No or held| I[Keep local results]
+    F -->|Yes| G[Execute approved actions and verify]
 ```
 
-## Confirmation gates
-
-High-risk cleanup confirmation:
-
-- Ask before deleting files, moving files, redacting content, or changing generated output that may be useful to the user.
-- Do not treat `.gitignore` as enough. Check tracked files with Git because ignored files can already be committed.
-
-Final publish authorization:
-
-- After all content, including README files and any screenshot asset, has been generated and checked, list the final publish summary.
-- Show the selected actual screenshot/case or generated workflow illustration before final publish authorization, reusing approval for unchanged images. If images are omitted, report the concrete reason from each README; never silently waive the image requirement because the Skill has no UI. See [readme-visuals.md](readme-visuals.md).
-- Ask the user explicitly whether to publish to GitHub when the current request did not already include explicit publish authorization.
-- If the user already said "修改并发布", "更新并同步到 GitHub", or equivalent edit-plus-publish wording, run checks and publish after success without a second confirmation.
-- Only `commit`, `push`, `sync`, `gh repo create`, or `gh repo edit` when explicit publish authorization exists.
-- Apply this authorization gate to every skill repository, not only to GitHub-skill-publisher itself.
-
-## Final pre-publish summary
-
-Include:
-
-- Target repository, remote URL, branch, and visibility.
-- Files that will be committed or published.
-- README status, including whether README files are complete and aligned.
-- Preview status: selected form (actual screenshot/case or generated illustration), path, source or prompt/rationale, accurate scope, and user approval. Generated illustrations do not verify execution.
-- Security result: secrets, API keys, tokens, accounts, local paths, private files, logs, and caches.
-- Third-party/copyright review: third-party names, platform names, copyright notices, trademark notices, upstream references, and license-limit notes that require a user decision.
-- Identity/attribution metadata review: author names, maintainer names, private emails, personal usernames, social handles, generator/tool watermarks, and Git commit author/signature metadata that require a user decision.
-- Completeness result: `SKILL.md`, README files, `LICENSE`, references, templates, scripts, and assets.
-- Dependency result: other skills, private directories, unpublished scripts, and platform-specific assumptions.
-- Runtime compatibility result for Codex and Claude Code.
-- OS compatibility result for required targets macOS and Windows, including any Windows-specific requirements or limitations. Linux is optional unless the user, repository, or documented runtime explicitly requires it.
-- GitHub metadata: repository description and license.
-- Warnings, failures, and remaining risks.
+Stop when the release-relevant result is known. Recheck affected facts after a fix; unchanged checks need no repeated run. Broad engineering, full regression, benchmarks and multiple model runs are not default publication requirements.

@@ -2,7 +2,7 @@
 
 For identity/attribution confirmation, [review-decisions.md](review-decisions.md) takes precedence over blanket “ask the user” instructions below: reuse unchanged scoped explicit approvals and ask only about new/changed findings. Reuse is not publication authorization; a current publication hold must be respected.
 
-Run this checklist before publishing a skill repository. [readme-style.md](readme-style.md) is the single authority for README order and information duties; this checklist verifies it without defining another framework.
+Use [pre-publish-flow.md](pre-publish-flow.md) for the short default. This is a detailed Skill-release checklist: select only sections applicable to the project, requested changes and existing required gates. Engineering scoring, full installation/client/platform acceptance are not required for every release. Mark non-applicable sections with a reason; never mark them PASS or waive a known applicable failure. Do not force this Skill checklist onto an application, CLI or library. [readme-style.md](readme-style.md) is the single authority for README order and information duties; this checklist verifies it without defining another framework.
 
 ## Repository
 
@@ -12,7 +12,7 @@ Run this checklist before publishing a skill repository. [readme-style.md](readm
 - [ ] `README.zh.md` exists.
 - [ ] Both READMEs embed representative actual screenshots/cases, or an approved generated illustration based on verified workflow and pain points when suitable material is unavailable. If neither form is possible, both state the actual omission reason; see [readme-visuals.md](readme-visuals.md).
 - [ ] `LICENSE` exists.
-- [ ] License is MIT unless the user requested another license.
+- [ ] Existing license and third-party obligations are preserved; choose a license for missing original content only with the relevant user decision.
 - [ ] `.gitignore` exists if generated files may appear.
 - [ ] Folder names are portable.
 - [ ] Tracked files have been reviewed with Git, not only filtered by `.gitignore`.
@@ -180,7 +180,16 @@ Run this checklist before publishing a skill repository. [readme-style.md](readm
 - [ ] Summary included target repository, remote URL, branch, visibility, file list, README status, security result, third-party/copyright review result, identity/attribution metadata review result, completeness result, dependency result, compatibility result, GitHub metadata, warnings, and remaining risks.
 - [ ] Summary included the README change-impact result: updated / no-impact with reason / blocked until README is updated.
 - [ ] Summary included the preview paths and approval scope, or the exact omission reason for both languages. Missing image plus missing reason blocks release.
-- [ ] Explicit publish authorization exists before any commit, push, repository creation, sync, or GitHub metadata update.
+- [ ] Explicit publish authorization exists for every remote action under [authorization.md](authorization.md); local commits were prepared only as authorized. The user saw repository URL, branch, visibility, exact commits/change summaries, candidate digest and action list before confirming.
 - [ ] If the current request used edit-only wording, the user was asked before publishing.
-- [ ] If the current request used explicit edit-plus-publish wording, publishing proceeded after successful checks without a second confirmation.
+- [ ] Explicit edit-plus-publish wording authorized preparation; concrete push scope was subsequently confirmed. Unchanged scoped confirmation may be reused; changed scope requires renewed confirmation. Push alone does not authorize a tag or Release.
 - [ ] Publishing was paused if checks failed, sensitive data was found, cleanup was destructive or ambiguous, compatibility was partial/unsupported, remote/branch/visibility was ambiguous, or the action was destructive.
+
+## Native task and installation acceptance
+
+- [ ] [acceptance.md](acceptance.md) was followed with an authorized configuration and actual candidate delivery.
+- [ ] Installed core tasks ran from the delivery, not from development files; required failures, errors and skipped tasks blocked publication.
+- [ ] Report, config digest and candidate content digest identify what was tested; content changes trigger relevant reruns.
+- [ ] Directory-copy integrity, actual client discovery/loading and conversation behavior are separate results.
+- [ ] Required Codex/Claude Code and OS evidence is resolved; a native pilot REVIEW_REQUIRED is not a publication pass.
+- [ ] [acceptance-record.md](../templates/acceptance-record.md) records genuine manual evidence outside public delivery.

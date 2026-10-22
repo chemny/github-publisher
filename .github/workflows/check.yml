@@ -3,6 +3,12 @@ name: Cross-platform checks
 on:
   push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      engineering_quality:
+        description: Run the optional engineering-quality score
+        type: boolean
+        default: false
 
 jobs:
   checks:
@@ -41,4 +47,5 @@ jobs:
         run: node scripts/publish-check.mjs
 
       - name: Run engineering quality check
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.engineering_quality }}
         run: node scripts/se-quality.mjs

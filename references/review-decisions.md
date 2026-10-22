@@ -1,10 +1,10 @@
 # Reusable Review Decisions
 
-Every release is checked; unchanged confirmed findings do not require another question. This is repository-scoped operational state, not user memory or publishing authorization.
+Every release is checked; unchanged confirmed findings do not require another question. Git receipts are repository-scoped; candidate receipts are bound to an exact byte-content inventory. Neither is user memory or publishing authorization.
 
 ## Workflow
 
-1. Run publish-check from the target repository with `--visibility=private` or `--visibility=public`, after verifying the intended visibility. Omission disables reuse.
+1. Run publish-check from the target repository with `--visibility=private` or `--visibility=public`, after verifying the intended visibility. Omission disables Git-scope reuse. Explicit candidate-content review is a separate mode described below.
 2. Read `reviewDecisions.scope` and each finding's `reviewId` from the fresh report. Reused items are INFO, remain visible in the report, and must not trigger a new question.
 3. Group only new/changed findings into a concise user question. Do not infer consent from a successful earlier push. Existing explicit conversation approvals can be used only if their exact content and scope match the current finding.
 4. After explicit confirmation, the Agent writes/merges a local receipt under the target repository's Git common directory, resolved with `git rev-parse --git-common-dir`: `publisher-review-decisions.json`. Preserve unrelated decisions. Never place receipts or quoted user conversations in tracked repository files.
@@ -44,3 +44,45 @@ The example timestamp is illustrative: use the actual confirmation time. Do not 
 ## Reporting
 
 Summarize reused decisions and only the changed items needing input. Do not re-ask a blanket identity question. Never equate an INFO receipt with release authorization or a legal license grant. Respect a current request to postpone publication even when all checks pass.
+
+
+## Candidate directories and archives without a Git worktree
+
+For an authorized candidate check, keep the report outside the delivery. The checker exposes `attributionReview.candidateDigest` (SHA-256 of sorted relative file paths and byte hashes, excluding `.git`, `node_modules` and the exact output-report path). This is a content-review identity, not a ZIP checksum, permission-mode attestation or remote repository scope. Symlinks and special files cannot receive candidate approval.
+
+After checking that an existing real user confirmation covers the same notices and candidate, the Agent may create an external receipt and explicitly pass it:
+
+```bash
+node scripts/publish-check.mjs --report=/external/evidence/scan.json --candidate-review=/external/evidence/content-review.json
+```
+
+Receipt shape (illustrative values only):
+
+```json
+{
+  "schemaVersion": 1,
+  "kind": "candidate-content-review",
+  "candidateDigest": "digest from the actual fresh scan",
+  "decisions": [{
+    "reviewId": "ID from that scan's actual finding",
+    "decision": "keep",
+    "revoked": false,
+    "confirmedAt": "2026-10-22T00:00:00Z",
+    "userQuote": "Exact previously confirmed content decision",
+    "sourceEvidence": {
+      "path": "/external/evidence/actual-user-request.txt",
+      "sha256": "SHA-256 of that real external confirmation file"
+    }
+  }]
+}
+```
+
+The receipt and confirmation source must resolve outside the candidate; there is no auto-discovery or import of approval text from repository files. The checker requires the exact candidate digest, matching finding ID, a non-revoked keep decision, timestamp, actual source bytes/hash and presence of the quoted text. The Agent remains responsible for establishing that those bytes come from a real human and cover this finding; the tool cannot authenticate a human. Do not invent evidence or convert an Agent's own assessment into human consent.
+
+Identical candidate contents may be relocated with an explicitly supplied receipt; any payload change invalidates this whole-candidate receipt, even an unrelated edit. Git receipts keep their existing repository/visibility scope and line-specific invalidation rules. Candidate receipts never approve Git history identities, repository visibility, secrets, unsafe content, destructive actions, push, tags or Releases. Invalid receipts leave the actual findings unresolved. A scan-time content change is a hard failure.
+
+## Context classification and report layers
+
+Ordinary passive voice, business-user content, value/data analysis, explicit example emails and a fingerprint-matched complete standard license are classified as INFO with source locations/reasons. Unknown attribution contexts still require review. No blanket filename, domain, code-block or license-directory exemption is used; sensitive-data scanning runs independently on original contents. Added or altered standard-license text is rechecked. Multiple attribution/identity categories in one file form one review item with all categories and source locations retained.
+
+`attributionReview.observations` exposes classified signals; pending and reused findings are separate from `summary.advisoryWarnings` and `summary.otherWarnings`. Original findings remain visible when a decision is reused as INFO. Overall README/manual review may remain required even when content findings are closed. None of these result layers authorize publication.

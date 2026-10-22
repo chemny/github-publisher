@@ -60,7 +60,7 @@ Prefer kebab-case for the repository name. Preserve the user's requested casing 
 
 ```text
 agent-evolution
-GitHub-skill-publisher
+github-publisher
 ```
 
 Keep the `name` in `SKILL.md` aligned with the repository name unless the user has a reason to differ.

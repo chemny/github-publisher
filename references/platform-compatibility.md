@@ -1,17 +1,17 @@
 # Platform Compatibility
 
-Run this test before publishing a public skill repository.
+Select this subprocess under [pre-publish-flow.md](pre-publish-flow.md) when platform-sensitive behavior or support claims change, or the user/project requires it. For an ordinary documentation update, preserve the existing tested/untested boundary without automatically running a platform matrix. The scope below applies only to the platforms actually claimed or selected; do not add new compatibility promises.
 
-The default target agent runtimes are:
+For a Skill claiming both clients, the review targets are:
 
 ```text
 Codex
 Claude Code
 ```
 
-Only these two clients are in the default compatibility review. Do not add other clients as checks, unresolved review items or publication gates without an explicit user request.
+Select only claimed/affected clients. Other clients require a relevant project claim or explicit user request.
 
-The required target operating systems are:
+For a Skill claiming both operating systems, the review targets are:
 
 ```text
 macOS
@@ -24,16 +24,16 @@ Linux compatibility is optional. Test or review it when it is easy or relevant, 
 
 Confirm whether the skill can be installed, discovered, and used across target agent runtimes and required operating systems without hidden local assumptions.
 
-If macOS or Windows compatibility is partial, broken, or not checked, tell the user before publishing and pause for confirmation. Do not silently publish a repository that claims compatibility when a required operating system is incompatible or untested.
+If compatibility for a selected required platform is partial, broken, or not checked, tell the user before publishing and resolve that support claim or pause for an explicit compatibility decision. Do not silently publish a repository that claims compatibility when a required operating system is incompatible or untested.
 
 ## Required behavior before publishing
 
 - Test each target platform when the local environment or available tooling makes that possible.
-- Test or statically review macOS and Windows compatibility whenever scripts, installers, path handling, shell commands, browser automation, filesystem operations, or external CLIs are involved.
+- Test or statically review the selected/affected claimed platforms when scripts, installers, paths, shell commands, browser automation, filesystem operations or external CLIs change platform-sensitive behavior.
 - Treat Linux compatibility as optional unless the user, repository, or documented runtime explicitly requires Linux.
 - If a platform cannot be tested, mark it `Not tested` and explain the reason.
 - If a platform is partially compatible, mark it `Partial` and explain exactly what works and what does not.
-- If macOS or Windows is incompatible, partial, or not checked, tell the user before any commit, push, or GitHub publication.
+- If a selected required platform is incompatible, partial, or not checked, disclose that limitation before publication and resolve the release decision; local edits do not require every platform to be tested.
 - Do not replace real testing with assumptions. Static review is useful, but it must be labeled as review rather than tested support.
 
 ## Compatibility checks

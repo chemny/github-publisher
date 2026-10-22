@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "delivery": {
+    "type": "candidate-directory",
+    "include": [
+      "SKILL.md",
+      "README.md",
+      "README.zh.md",
+      "LICENSE",
+      ".gitignore",
+      ".github",
+      "references",
+      "templates",
+      "scripts",
+      "evals",
+      "examples",
+      "assets"
+    ]
+  },
+  "cases": [
+    {
+      "id": "installed-reference-closure",
+      "required": true,
+      "command": [
+        "node",
+        "evals/publisher-tasks.mjs",
+        "references"
+      ],
+      "timeoutMs": 10000
+    },
+    {
+      "id": "check-only-leaves-target-unchanged",
+      "required": true,
+      "command": [
+        "node",
+        "evals/publisher-tasks.mjs",
+        "check-only"
+      ],
+      "timeoutMs": 10000
+    },
+    {
+      "id": "broken-delivery-blocks-check",
+      "required": true,
+      "command": [
+        "node",
+        "evals/publisher-tasks.mjs",
+        "blocker"
+      ],
+      "timeoutMs": 10000
+    },
+    {
+      "id": "installed-regression-suite",
+      "required": true,
+      "command": [
+        "node",
+        "--test",
+        "scripts/readme-check.test.mjs",
+        "scripts/readme-document.test.mjs",
+        "scripts/readme-visuals.test.mjs",
+        "scripts/review-decisions.test.mjs",
+        "scripts/authorization.test.mjs",
+        "scripts/acceptance.test.mjs",
+        "scripts/review-findings.test.mjs",
+        "scripts/candidate-review.test.mjs"
+      ],
+      "timeoutMs": 60000
+    }
+  ],
+  "manual": [
+    {
+      "id": "codex-loading-and-behavior",
+      "required": true,
+      "instruction": "Not executed by this runner. In a fresh Codex environment install the exact candidate, verify discovery/loading, then run the inspect-only, edit-only and publish-pause cases in references/acceptance.md. Record candidateDigest, client version, transcript and before/after evidence."
+    },
+    {
+      "id": "claude-code-loading-and-behavior",
+      "required": true,
+      "instruction": "Not executed by this runner. In a fresh Claude Code environment install the exact candidate and execute the same loading and conversation cases. Static policy regression is not a substitute."
+    },
+    {
+      "id": "windows-install-and-tasks",
+      "required": true,
+      "instruction": "Not executed by this runner. Verify fresh installation and core tasks on Windows for the exact candidate, or report the unsupported/untested scope and obtain an explicit compatibility decision before publication."
+    },
+    {
+      "id": "release-review-and-confirmation",
+      "required": true,
+      "instruction": "Complete semantic, visual, rights and compatibility review. Show repository, branch, visibility, exact commits, candidate digest and actions; obtain explicit push confirmation. Push approval alone does not approve creating a Release."
+    }
+  ]
+}

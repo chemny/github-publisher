@@ -7,6 +7,9 @@ import { createHash } from "node:crypto";
 import { inspectReadmeVisuals } from "./readme-visuals.mjs";
 import { inspectReadme, manualReadmeReview } from "./readme-check.mjs";
 
+import { inspectAttribution } from "./review-findings.mjs";
+import { candidateDigest, loadCandidateReview } from "./candidate-review.mjs";
+
 const args = process.argv.slice(2);
 const jsonOnly = args.includes("--json");
 const allowLegacyReadme = args.includes("--allow-legacy-readme") || args.includes("--pass-through-readme");
@@ -14,6 +17,19 @@ const allowReadmeUnchanged = args.includes("--readme-no-impact") || args.include
 const reportPathArg = args.find((arg) => arg.startsWith("--report="))?.split("=")[1] ?? "publish-check-report.json";
 const root = process.cwd();
 const reportPath = path.resolve(root, reportPathArg);
+// A report may replace this tool's prior report, never an existing payload file.
+let existingReport;
+try { existingReport = fs.lstatSync(reportPath); } catch (error) { if (error.code !== "ENOENT") throw error; }
+if (existingReport) {
+  let owned = false;
+  try {
+    const st = fs.lstatSync(reportPath);
+    const prior = !st.isSymbolicLink() && st.isFile() ? JSON.parse(fs.readFileSync(reportPath, "utf8")) : null;
+    owned = !!(prior && prior.readmeChecks && prior.reviewDecisions?.schemaVersion === 1 && Array.isArray(prior.results) && Number.isFinite(Date.parse(prior.summary?.checkedAt)));
+  } catch { /* Fail closed; retain the existing file. */ }
+  if (!owned) { console.error("Report target is not an owned prior publish-check report; no file overwritten."); process.exit(2); }
+}
+
 const results = [];
 const readmeVisuals = {};
 const readmeChecks = {};
@@ -37,22 +53,23 @@ try {
   results.push({ level: "WARNING", title: "Invalid review decision record", detail: "Approval reuse disabled; repair the local record before relying on it." });
 }
 
+let contentDigest = null;
+let candidateReview = { decisions: [], status: "not-supplied" };
+const reviewObservations = [];
 function add(level, title, detail, evidence) {
   if (level === "WARNING" && evidence && /review needs user decision/.test(title)) {
     const reviewId = digest([title, evidence]);
-    const approved = ["private", "public"].includes(visibility) && approvals.some((entry) =>
+    const gitApproved = ["private", "public"].includes(visibility) && approvals.some((entry) =>
       entry.reviewId === reviewId && entry.decision === "keep" && !entry.revoked &&
       typeof entry.userQuote === "string" && entry.userQuote.trim() &&
       typeof entry.evidenceRef === "string" && entry.evidenceRef.trim() &&
       Number.isFinite(Date.parse(entry.confirmedAt)));
-    results.push({ level: approved ? "INFO" : level, title: approved ? `Reused user decision: ${title}` : title, detail, reviewId, decisionReused: approved });
+    const candidateApproved = !/^Git history/.test(title) && candidateReview.decisions.some(entry => entry.reviewId === reviewId);
+    const approved = gitApproved || candidateApproved;
+    results.push({ level: approved ? "INFO" : level, title: approved ? `Reused user decision: ${title}` : title, detail, reviewId, decisionReused: approved, decisionSource: gitApproved ? "git-scope" : candidateApproved ? "candidate-content" : null });
     return;
   }
   results.push({ level, title, detail });
-}
-
-function reviewEvidence(rel, content, patterns) {
-  return [rel, content.split(/\r?\n/).filter((line) => patterns.some(([, re]) => re.test(line))).map((line) => line.trim()).sort()];
 }
 
 function exists(rel) {
@@ -128,7 +145,12 @@ function listFiles() {
 }
 
 const trackedFiles = git(["ls-files"]).split("\n").filter(Boolean);
+try { contentDigest = candidateDigest(root, { reportPath }); }
+catch (error) { if (args.some(a => a.startsWith("--candidate-review="))) add("WARNING", "Candidate review unavailable", error.message); }
 const files = listFiles();
+const candidateReviewFile = args.find(a => a.startsWith("--candidate-review="))?.slice("--candidate-review=".length);
+candidateReview = loadCandidateReview(root, candidateReviewFile && path.resolve(root, candidateReviewFile), contentDigest);
+if (candidateReview.status === "invalid") add("WARNING", "Invalid candidate review record", `Content review reuse disabled: ${candidateReview.reason}`);
 const changedFiles = [
   ...git(["diff", "--name-only", "HEAD", "--"]).split("\n").filter(Boolean),
   ...git(["ls-files", "--others", "--exclude-standard"]).split("\n").filter(Boolean),
@@ -322,11 +344,12 @@ function shouldScanContent(rel) {
 }
 
 function shouldScanThirdPartyReview(rel) {
+  if (path.resolve(root, rel) === reportPath) return false; // Prior report is output, not new attribution; secrets still scan it.
   if (!shouldScanContent(rel)) return false;
   if (/^(?:smoke-test-report|publish-check-report)\.json$/i.test(path.basename(rel))) return false;
   // The checker itself contains the detection keywords in its own regex source;
   // scanning it would always self-match. Skip it.
-  if (rel === "scripts/publish-check.mjs" || rel.endsWith("/scripts/publish-check.mjs")) return false;
+  if (["publish-check.mjs", "review-findings.mjs", "candidate-review.mjs"].some(name => rel === `scripts/${name}` || rel.endsWith(`/scripts/${name}`))) return false;
   // templates/ holds {{placeholder}} scaffolding meant to be filled per-skill;
   // flagging its built-in attribution boilerplate is not actionable.
   if (/^templates\//.test(rel) || rel.includes("/templates/")) return false;
@@ -339,28 +362,13 @@ function isHighPriorityThirdPartySurface(rel) {
 }
 
 function shouldScanIdentityReview(rel) {
+  if (path.resolve(root, rel) === reportPath) return false; // Do not recursively review the tool's own findings.
   if (!shouldScanContent(rel)) return false;
   if (/^(?:smoke-test-report|publish-check-report|se-quality-report)\.json$/i.test(path.basename(rel))) return false;
-  if (rel === "scripts/publish-check.mjs" || rel.endsWith("/scripts/publish-check.mjs")) return false;
+  if (["publish-check.mjs", "review-findings.mjs", "candidate-review.mjs"].some(name => rel === `scripts/${name}` || rel.endsWith(`/scripts/${name}`))) return false;
   if (/^templates\//.test(rel) || rel.includes("/templates/")) return false;
   if (/^references\/(?:security-checklist|publish-checklist|readme-style|pre-publish-flow|readme-review|readme-checks)\.md$/.test(rel)) return false;
   return true;
-}
-
-// The generic "third-party names ... remain subject to their original terms"
-// disclaimer is boilerplate this skill itself tells authors to write, and it
-// names no specific party. Strip it before scanning so the tool does not warn on
-// the very sentence it recommends. Real attribution (named party, ©, forked from)
-// still trips the patterns.
-const boilerplateDisclaimerLine = [
-  /第三方名称[\s\S]{0,40}受其原始[\s\S]{0,20}约束/,
-  /third-?party names[\s\S]{0,120}remain subject to their original[\s\S]{0,40}terms/i,
-];
-function stripBoilerplateDisclaimer(content) {
-  return content
-    .split(/\r?\n/)
-    .filter((line) => !boilerplateDisclaimerLine.some((re) => re.test(line)))
-    .join("\n");
 }
 
 for (const rel of files) {
@@ -381,76 +389,24 @@ for (const rel of files) {
   if (localPathMatches.length > 0) add("FAIL", "Local absolute path found", rel);
 }
 
-// High-signal only. A bare platform/product mention (GitHub, Claude, Codex,
-// Apple, Anthropic, Meta...) is expected in skill docs and is NOT an attribution
-// duty. Design style / design language references are also allowed when they do
-// not imply copied assets, endorsement, ownership, or relicensing. We flag the
-// actual signals that a human must decide on before redistributing someone
-// else's content: explicit reuse/attribution verbs, foreign copyright/trademark
-// notices, external license terms, and generated-by / ownership language.
-const thirdPartyReviewPatterns = [
-  ["external attribution / reuse statement", /\b(?:adapted from|derived from|forked from|ported from|originally (?:from|by|written by)|copied from)\b|(?:改编自|衍生自|移植自|源自|fork\s*自)/i],
-  ["copyright or trademark notice", /(?:©|\(c\)\s*\d{4}|all rights reserved|registered trademark|™|®|版权所有|著作权|保留所有权利)/i],
-  ["external license terms", /(?:original (?:license|terms)|under (?:its|their|the original) license|subject to .{0,30}license|原始(?:协议|许可|条款)|第三方.{0,8}(?:协议|许可|条款))/i],
-  ["generated-by or third-party ownership language", /\b(?:generated by|created by|made by|owned by|property of|courtesy of)\b|(?:归.{0,8}所有|版权所有者)|(?:^|\n)\s*由(?!生图工具|专业生图|图像生成工具).{1,24}(?:生成|创建|制作)/i],
-];
-
+// Attribute only actual review candidates; benign wording remains visible as INFO.
 for (const rel of files) {
-  if (!shouldScanThirdPartyReview(rel)) continue;
-  let content = "";
-  try {
-    content = stripBoilerplateDisclaimer(read(rel));
-  } catch {
-    continue;
+  const thirdParty = shouldScanThirdPartyReview(rel), identity = shouldScanIdentityReview(rel);
+  if (!thirdParty && !identity) continue;
+  let content;
+  try { content = read(rel); } catch { continue; }
+  const finding = inspectAttribution(rel, content, { thirdParty, identity });
+  reviewObservations.push({ file: rel, standardLicense: finding.standardLicense, informational: finding.informational, candidates: finding.review });
+  if (finding.standardLicense) {
+    add("INFO", "Standard license text retained", `${rel}: recognized complete ${finding.standardLicense} text; no added generator attribution. This does not certify the surrounding work's license provenance.`);
   }
-
-  const matches = [];
-  for (const [label, pattern] of thirdPartyReviewPatterns) {
-    if (/^(?:LICENSE|[^/]+\/LICENSE)$/i.test(rel) && label === "copyright or trademark notice") continue;
-    pattern.lastIndex = 0;
-    if (pattern.test(content)) matches.push(label);
-  }
-  if (matches.length > 0) {
-    const highPriority = isHighPriorityThirdPartySurface(rel);
-    add(
-      "WARNING",
-      highPriority ? "High-priority README/LICENSE third-party review needs user decision" : "Third-party/copyright review needs user decision",
-      `${rel}: ${[...new Set(matches)].join(", ")}. Neutral design-language/company references such as Apple, Anthropic, or Meta are allowed when they do not imply ownership, endorsement, copied assets, or relicensing. Ask only if no matching prior decision exists.`,
-      reviewEvidence(rel, content, thirdPartyReviewPatterns)
-    );
-  }
-}
-
-const placeholderIdentity = "(?:<[^>]+>|\\{\\{[^}]+\\}\\}|\\[[^\\]]*(?:author|name|email|username|handle)[^\\]]*\\]|your[-_ ]?(?:name|email|username)|example|placeholder|todo|tbd|n/?a|none|unknown)";
-const identityReviewPatterns = [
-  ["author or maintainer field", new RegExp(`(?:^|\\n)\\s*(?:author|authors|maintainers?|creator|created by|written by|owner|contact|作者|维护者|创建者|联系人)\\s*[:=]\\s*(?!\\s*${placeholderIdentity})\\S`, "i")],
-  ["copyright holder identity", new RegExp(`(?:copyright\\s*(?:\\(c\\)|©)?|版权所有)\\s*\\d{4}(?:-\\d{4})?\\s+(?!\\s*${placeholderIdentity})\\S`, "i")],
-  ["email address", /\b[A-Z0-9._%+-]+@(?!users\.noreply\.github\.com\b|noreply\.github\.com\b|example\.(?:com|org|net)\b|email\b)[A-Z0-9.-]+\.[A-Z]{2,}\b/i],
-  ["personal username or social handle", /(?:^|\n)\s*(?:github|twitter|x|weibo|bilibili|handle|username|user|用户名|账号|社交账号)\s*[:=]\s*@?[A-Za-z0-9_.-]{3,}/i],
-  ["generator or tool watermark", /\b(?:generated by|generated with|created with|made with|built with|scaffolded by|powered by|ai-generated by|written with)\b|(?:^|\n)\s*(?:生成工具|制作工具|生成者|制作方)\s*[:：]|(?:^|\n)\s*由(?!生图工具|专业生图|图像生成工具).{1,24}(?:生成|创建|制作|驱动)/i],
-];
-
-for (const rel of files) {
-  if (!shouldScanIdentityReview(rel)) continue;
-  let content = "";
-  try {
-    content = read(rel);
-  } catch {
-    continue;
-  }
-
-  const matches = [];
-  for (const [label, pattern] of identityReviewPatterns) {
-    pattern.lastIndex = 0;
-    if (pattern.test(content)) matches.push(label);
-  }
-  if (matches.length > 0) {
-    add(
-      "WARNING",
-      "Identity/attribution metadata review needs user decision",
-      `${rel}: ${[...new Set(matches)].join(", ")}. Ask only if no matching prior decision exists.`,
-      reviewEvidence(rel, content, identityReviewPatterns)
-    );
+  if (finding.informational.length) add("INFO", "Non-attribution context", `${rel}: ${[...new Set(finding.informational.map(x => x.reason))].join("; ")}.`);
+  if (finding.review.length) {
+    const kinds = new Set(finding.review.map(x => x.kind));
+    const title = kinds.has("third-party")
+      ? (isHighPriorityThirdPartySurface(rel) ? "High-priority README/LICENSE third-party review needs user decision" : "Third-party/copyright review needs user decision")
+      : "Identity/attribution metadata review needs user decision";
+    add("WARNING", title, `${rel}: ${[...new Set(finding.review.map(x => x.label))].join(", ")}. Review the actual context; unchanged confirmed findings may be reused.`, finding.evidence);
   }
 }
 
@@ -590,6 +546,23 @@ const evalsPresent =
   exists("scripts/smoke-test.mjs") ||
   files.some((rel) => /(?:^|\/)validate[^/]*\.(py|mjs|js)$/i.test(rel));
 
+function invalidateCandidateSnapshot(detail) {
+  for (const item of results) {
+    if (item.decisionSource !== "candidate-content") continue;
+    item.level = "WARNING";
+    item.title = item.title.replace(/^Reused user decision: /, "");
+    item.decisionReused = false;
+    item.decisionSource = null;
+  }
+  if (candidateReview.status === "loaded") candidateReview = { decisions: [], status: "invalidated-during-scan", validDecisions: 0 };
+  add("FAIL", "Candidate changed during scan", detail);
+}
+if (contentDigest) {
+  try {
+    if (candidateDigest(root, { reportPath }) !== contentDigest) invalidateCandidateSnapshot("Candidate content is no longer the inspected snapshot; rerun against a fixed candidate. Prior content decisions do not authorize this changed result.");
+  } catch (error) { invalidateCandidateSnapshot(error.message); }
+}
+
 const fail = results.filter((r) => r.level === "FAIL");
 const warning = results.filter((r) => r.level === "WARNING");
 
@@ -677,6 +650,14 @@ const report = {
   readmeVisuals,
   readmeChecks,
   manualReview,
+  attributionReview: {
+    observations: reviewObservations,
+    pendingFindings: results.filter(r => r.level === "WARNING" && r.reviewId).length,
+    reusedFindings: results.filter(r => r.decisionReused).length,
+    candidateDigest: contentDigest,
+    candidateReceipt: { status: candidateReview.status, validDecisions: candidateReview.validDecisions ?? 0, invalidDecisions: candidateReview.invalidDecisions ?? 0 },
+    publicationAuthorized: false,
+  },
   reviewDecisions: { schemaVersion: 1, scope: reviewScope, visibility: visibility ?? "unknown", storage: approvalFile ? "git-common-dir/publisher-review-decisions.json" : null },
   summary: {
     status,
@@ -684,6 +665,9 @@ const report = {
     readmeAudience,
     failed: fail.length,
     warnings: warning.length,
+    unresolvedReviewFindings: results.filter(r => r.level === "WARNING" && r.reviewId).length,
+    advisoryWarnings: results.filter(r => r.level === "WARNING" && r.title === "description lacks trigger phrasing").length,
+    otherWarnings: results.filter(r => r.level === "WARNING" && !r.reviewId && r.title !== "description lacks trigger phrasing").length,
     engineeringScore,
     band,
     checkedAt: new Date().toISOString(),

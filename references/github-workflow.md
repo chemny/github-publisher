@@ -4,27 +4,11 @@ Use this for first-time publishing.
 
 ## Before publishing
 
-1. Confirm repository name.
-2. Confirm public or private visibility.
-3. Draft the GitHub repository description in English by default.
-4. Confirm repository root is the skill root.
-5. Create a cleanup plan for drafts, caches, logs, generated output, local-only files, and environment files.
-6. Check `.gitignore`, `.env`, `.env.example`, and tracked files.
-7. Run smoke test and automated publish check when available:
+Use [pre-publish-flow.md](pre-publish-flow.md) for the short default, including the necessary safety, documentation and change-scoped native checks. First publication may require preparing missing README, license, preview or installation facts; read only the relevant detailed guidance. Keep the actual project layout; only a Skill uses the single-Skill root convention. Preserve an existing license rather than replacing it by default.
 
-```bash
-node scripts/smoke-test.mjs
-node scripts/publish-check.mjs
-```
+Engineering scores, performance/Token evaluation, full fresh-install acceptance and all-client/OS tests are not automatically required. Select extra work only for a concrete trigger, within authorization; do not waive applicable project-required gates or claim untested support.
 
-8. Run publish, platform compatibility, completeness, dependency, portability, and security checks.
-9. Review `git status`.
-10. Show the final pre-publish summary after all content, including README files, has been generated and checked.
-11. Ask the user whether to publish to GitHub unless the user's current request already included explicit edit-plus-publish authorization such as "修改并发布" or "更新并同步到 GitHub".
-
-Do not create repositories, commit, push, sync, or edit GitHub metadata unless explicit publish authorization exists.
-
-Explicit publish authorization can be given either before the checks, such as "修改并发布", or after the final summary, such as "确认发布".
+Before remote creation or push, show account, repository URL, branch, visibility, exact commits/change summaries, candidate digest, actions and relevant check outcomes. Obtain explicit confirmation under [authorization.md](authorization.md). Reuse only unchanged confirmed scope; a hold overrides approval. A tag/Release requires its own listed action and target.
 
 ## Authentication
 
@@ -47,7 +31,7 @@ Login with browser/device code
 
 ## Create and push
 
-For a new public repository:
+Only after confirmation explicitly covers both repository creation and push, for a new public repository:
 
 ```bash
 gh repo create <repo-name> --public --source=. --remote=origin --push

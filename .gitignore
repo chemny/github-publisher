@@ -7,3 +7,5 @@ drafts/
 smoke-test-report.json
 publish-check-report.json
 se-quality-report.json
+acceptance-report.json
+.publisher-pilot/

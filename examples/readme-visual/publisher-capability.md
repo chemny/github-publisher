@@ -1,6 +1,6 @@
 # Reference case: Publisher capability illustration
 
-This is an approved illustration for GitHub Skill Publisher, a workflow Skill without a representative application screen. It introduces what the Skill helps an author prepare, review and publish; it is not a screenshot, test report or proof of platform compatibility.
+This is an approved illustration for GitHub Publisher, a workflow Skill without a representative application screen. It introduces what the Skill helps an author prepare, review and publish; it is not a screenshot, test report or proof of platform compatibility.
 
 ![Capability illustration: Skill preparation, publication review and GitHub publication](../../assets/publisher-hero-v4.png)
 

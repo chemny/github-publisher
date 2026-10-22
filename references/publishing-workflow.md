@@ -1,0 +1,236 @@
+---
+name: github-publisher
+description: Use this skill when the user wants to publish, update, package, document, or synchronize an agent skill to GitHub. It captures a single-skill-per-repository workflow, bilingual README writing style, GitHub repository creation, commit/push updates, publish readiness checks, Codex/Claude Code compatibility checks, portability checks, and security review for public skill repositories.
+metadata:
+  version: "0.1.0"
+---
+
+# GitHub Publisher
+
+Use this skill to turn a local agent skill into a polished single-skill GitHub repository and to maintain it over time.
+
+This reference contains detailed Skill-publishing procedures. Use `references/pre-publish-flow.md` for the short default and subprocess triggers. Only read/apply the relevant sections below; this is not an every-release action chain. General projects retain their own conventions.
+
+## Core rule
+
+The user's preferred structure is:
+
+```text
+one skill = one GitHub repository
+```
+
+The repository root is the skill root. Do not create a `skills/<name>/` wrapper unless the user explicitly asks for a collection repository.
+
+## Publish authorization rule
+
+This rule applies to GitHub Publisher itself and to every other skill repository it publishes or updates.
+
+Follow `references/authorization.md` as the single authorization authority. Inspect/discuss requests are read-only. Edit-only requests permit relevant local changes and tests, never remote operations. Edit-plus-publish requests authorize preparation, but before pushing show the repository URL, branch, visibility, exact commit list/change summaries, candidate digest and action list, then wait for explicit human confirmation. Reuse confirmation only for the same unchanged scope. Push approval does not authorize a tag or Release unless those exact actions and targets were included. A current hold overrides prior approval.
+
+Local commits may be prepared during authorized implementation; do not commit merely to complete a local edit request. Never push, create a repository, update remote metadata, tag remotely or publish a Release based only on a generic intention to publish. Checks and attribution receipts cannot authorize these actions. For an inspect-only check, do not write reports into the target; use chat or an authorized evidence location.
+
+Always run the relevant pre-publish checks and provide the final concrete summary before remote confirmation.
+
+## Release surface normalization rule
+
+Before asking about identity, attribution, or Git-history metadata, follow `references/review-decisions.md`. Record explicit first-time decisions locally and reuse matching decisions on later checks. Ask only about new or changed findings; successful prior publication is not consent evidence. Decision reuse never authorizes a push. A user hold on publication overrides all previous publish authorization.
+
+Any skill published through GitHub Publisher is a publisher-managed release by default. Before publishing, normalize the public release surface:
+
+```text
+README.md      English, GitHub default
+README.zh.md   Chinese
+GitHub description: English by default
+```
+
+Old projects may still have the legacy layout:
+
+```text
+README.md      Chinese
+README.en.md   English
+```
+
+Do not silently keep this layout during a publisher-managed release. Migrate it by default before publishing.
+
+Only keep the legacy layout when the user explicitly says to preserve the old README, not migrate README, or publish the current files as-is. In that pass-through case, report the legacy layout as a warning and run:
+
+```bash
+node scripts/publish-check.mjs --allow-legacy-readme
+```
+
+## When to use
+
+Use this skill when the user asks to:
+
+- publish a skill to GitHub,
+- update a skill repository,
+- improve a skill README,
+- create bilingual README files,
+- prepare a skill for public release,
+- check whether a skill is safe and portable before publishing,
+- create a new GitHub repo for a skill,
+- push local skill updates to GitHub.
+
+## Detailed procedures when selected
+
+```text
+Default: Request/diff -> Relevant checks -> Account and exact-scope summary -> Explicit confirmation -> Approved remote actions -> Verify
+Optional procedures below: select only for a concrete need; return to the default flow when done.
+```
+
+1. Inspect the local skill files and current git state. Before drafting, follow `references/readme-review.md` to establish an internal product brief and main/supporting task map, then establish current file/line evidence, resolve consequential gaps and reuse approved facts. Create a local record from `templates/readme-review-record.md`; never copy it into public README prose. Freeze any stage-specific comparison rubric and preserve before outputs before modification.
+2. Normalize to single-skill repository structure.
+3. Add a visual in both READMEs: use Preview / 效果预览 for actual screenshots/cases; a generated capability/workflow illustration may instead sit in Overview without a separate heading, labelled in alt text as illustration / 示意图. Prefer representative actual screenshots or cases. If no suitable material is available, generate an illustration from the verified Skill workflow and pain points; 16:9 is acceptable. This generated illustration can be the primary Preview without an additional real screenshot, but must be identified as an illustration, not execution evidence. Follow `references/readme-visuals.md`; prefer a self-explanatory image with useful alt text and no caption, or at most one short scope/result line. Source, reproduction conditions and rights belong in the internal review.
+   - If it is a web page, run/open the page and capture a browser screenshot.
+   - If it is an app/program, launch the program and capture the real UI.
+   - Store the image in the repository, usually under `assets/`, and reference it from both `README.md` and `README.zh.md`.
+   - Do not fabricate screenshots or test results. Use the actual screenshot/case route when suitable material exists, or the labelled workflow/pain-point illustration route when it does not. If sample data is safer than private data, keep the real UI but use safe sample data; record provenance internally and add a brief public label only if needed to avoid misleading readers.
+   - Before publishing, show the selected screenshot, case output or generated illustration to the user and wait for their confirmation.
+   - For output-producing skills without a UI, prefer approved real outputs; otherwise use the grounded generated-illustration route. Record the selected form and rationale internally. Files in assets without README embeds do not count.
+   - If neither visual form can be provided, explain the specific constraint visibly in both READMEs and repeat it in the final publish summary. No UI alone is not a reason. Missing both a preview and a reason is FAIL.
+4. Write or update `README.md`, `README.zh.md`, `LICENSE`, and `.gitignore` when useful.
+   - Use `references/readme-style.md` as the single authority for the ten-section framework and content duties. Templates must follow it; do not treat a stale template as a competing standard.
+   - For publisher-managed releases, evaluate any existing README against the current default README structure before publishing.
+   - For every update release, review the current diff before publishing and decide whether the change affects README content.
+   - If changes touch user-visible capability, usage, install flow, dependencies, compatibility, outputs, repository structure, templates, scripts, security/copyright boundaries, or GitHub metadata, update both `README.md` and `README.zh.md` before publishing.
+   - If the changes are small and do not affect README content, do not force a README edit; document the no-impact reason in the final pre-publish summary and run the publish check with `--readme-no-impact`.
+   - Do not blindly overwrite old READMEs, but if the user did not explicitly ask to preserve the current README as-is, upgrade missing key modules before publishing.
+   - Follow the default ten-section order and English/Chinese names in `references/readme-style.md`, including its option to fold a labelled generated illustration into Overview without a Preview heading. Put audience fit in Overview, conditions and compatibility in Installation, complete component/sub-Skill responsibilities in How It Works, and actual files plus documentation links in Repository Structure. Keep License and approved About Me information at the end.
+   - README copy describes the current product. Exclude update history, migration/fix records, repository maintenance and internal development logs throughout the body; keep them in changelogs, release notes or developer documents. Current requirements, limitations and the product’s own publishing capabilities remain valid content.
+   - Use short conversational Quick Start and scenario requests for ordinary users, tied to the product brief: representative first use and main scenarios before supporting tasks. Do not require a post-prompt explanation paragraph. Verify inputs, action, result location, success judgment and next step in the internal review, not five compulsory public labels. Never invent author details, components or examples to fill a section. Before acceptance, complete the ten-section semantic and first-use text walkthrough in `references/readme-review.md`, separately from automated gates. The three manual product-fit gates (representative first use, scenario coverage/priority, four-section consistency) must pass before semantic acceptance; high formatting scores cannot offset failure.
+   - Productize README copy before release: use a two-column user-facing core-capabilities table and make the main install section a copy-ready natural-language request that asks the current Agent to install the public repository URL.
+   - For agent-facing skill repositories, remove default `git clone`, directory-copy, manual-install, platform-path, dependency-command, and restart instructions from the main README. Use Requirements / 配置要求 (brief explanation plus named-item table) and Quick Installation / 快速安装 (request/action plus feedback). State the Agent client, minimum core runtime and optional tools/accounts. Keep implementation dependency lists and OS test matrices in internal review or deeper docs. The installing Agent checks and fills core environment gaps before installation, then verifies installation and discovery/loading or readiness; optional features are prepared on demand. Do not promise automatic success. For applications, CLI/library projects and explicitly non-Agent audiences, use their actual supported method; see `references/install-section.md`.
+   - When an existing README still uses a clone-and-copy installation flow, rewrite that section during normalization before running the final publish check. Do not merely report the old structure and leave it for the user to fix.
+5. Draft GitHub repository metadata locally, especially the repository description; apply remote metadata only after scope confirmation.
+   - Use an English repository description by default unless the user explicitly requests Chinese or a China-facing repository.
+   - The description should match the first-screen value proposition in `README.md`.
+6. Create a pre-publish cleanup plan for drafts, caches, logs, generated output, and local-only files.
+   - Do not automatically delete or move files when the action is destructive or ambiguous.
+   - Ask the user before deletion, redaction, file moves, or any high-risk cleanup.
+   - Use `.gitignore` as prevention, but also check tracked files with Git because `.gitignore` does not protect files already committed.
+7. Run the project's required and affected native checks. Publisher's smoke is a self-check for changes to Publisher itself, not an automatic test for target projects.
+   - Prefer `node scripts/smoke-test.mjs` from the skill repository when available.
+   - Use the smoke test to verify the skill's own required files, references, templates, language switch style, and publish-check script.
+8. Run automated publish checks when possible.
+   - Prefer `node scripts/publish-check.mjs` from the skill repository when available.
+   - By default, `node scripts/publish-check.mjs` requires the normalized release surface: English `README.md`, Chinese `README.zh.md`, and no legacy `README.en.md`.
+   - The publish check must validate README structure, not only README language layout. A README that is English by default but misses required product/documentation modules is not release-ready. The checker validates the ten-section framework in both languages; follow `references/readme-checks.md` for coverage and `--readme-audience=developer` when actual developer installation differs. Report supported-syntax limits; a PASS does not certify reader understanding, product semantics or bilingual factual parity.
+   - The publish check must also validate README freshness against the current diff. If relevant non-README files changed but README files did not, treat that as a release blocker unless the diff was reviewed and explicitly marked no-impact with `--readme-no-impact`.
+   - Use `node scripts/publish-check.mjs --allow-legacy-readme` only when the user explicitly requests a pass-through release that preserves old README files.
+   - The script must report `PASS`, `WARNING`, or `FAIL`; it must not commit, push, create repositories, or publish.
+   - Treat `FAIL` as a hard stop until fixed.
+9. Run completeness, dependency, sensitive-data, portability, and security checks.
+   - Check for API keys, user accounts, private tokens, local paths, private files, and machine-specific assumptions.
+   - Redact or replace sensitive/local-only content before publishing.
+   - Check for third-party names, brand names, platform names, copyright notices, trademark notices, upstream-source statements, and external license-limit notes.
+   - Allow neutral references to design style, design language, and company names such as Apple, Anthropic, and Meta when they are used only as design or compatibility context and do not imply ownership, endorsement, copied assets, or relicensing.
+   - Treat README and LICENSE findings involving other third parties as high-priority review items when they include attribution, copyright, trademark, source, license, generated-by, or ownership language.
+   - Check for public identity and attribution signals, including author names, maintainer names, private emails, personal usernames, social handles, generator watermarks, tool watermarks, and visible Git commit author/signature metadata.
+   - For third-party and identity findings, first compare local confirmed decisions. Do not remove content automatically. Ask only about unmatched or changed findings, then record the user's explicit decision as described in `references/review-decisions.md`.
+   - Check whether the skill is complete and whether it has hard dependencies on other skills or private local resources.
+   - If a dependency is required, document it clearly or bundle/adapter-isolate it before publishing.
+10. Select compatibility review only when platform behavior/support claims change or the user/project requires it; use references/pre-publish-flow.md and references/platform-compatibility.md to choose claimed/affected scope.
+   - Select declared/affected clients; Codex and Claude Code are available review targets, not an automatic matrix for every release.
+   - Select declared/affected operating systems. Platform-sensitive changes require relevant evidence; an unchanged documentation-only release does not require a new OS matrix.
+   - Linux compatibility is optional. Test or review it when it is easy or relevant, but do not treat missing Linux validation as a release blocker by default.
+   - If a required selected platform cannot be verified, disclose the untested claim and resolve that release requirement before publication; never invent support.
+   - If a selected required platform is incompatible or partial, tell the user and resolve its support claim or obtain the explicit compatibility decision before publishing.
+11. Present a final pre-publish summary after all content, including README files, has been generated and checked.
+   - Include target repository, remote URL, branch, visibility, files to publish, README status, preview paths and approval status (or the concrete omission reason), security result, third-party/copyright review result, completeness result, dependency result, compatibility result, GitHub metadata, warnings, and remaining risks. Report the checker's readmeVisuals for both languages; never silently dismiss a missing-image warning as no UI.
+   - Show the captured screenshot to the user before publishing.
+   - Include applicable check results; include native acceptance/client results only when required or selected, with unresolved scope explicit. Follow `references/authorization.md`: show the exact commit list, repository, branch, candidate digest and action scope, then obtain explicit human confirmation before remote operations.
+12. Prepare local commits as authorized; create repositories, push, sync or update GitHub metadata only after explicit confirmation of the final scope under `references/authorization.md`. A Release requires its own listed action, tag and target commit.
+13. Create the GitHub repository or push to the existing remote.
+14. Verify URL, branch, remote, repository description, and clean working tree.
+
+## Native acceptance pilot
+
+This is an optional subprocess selected under `references/pre-publish-flow.md`, not a default on every release. Use `references/acceptance.md` for the dependency-free local acceptance workflow when triggered. After explicit execution authorization, review `evals/acceptance.json`, build its candidate directory and run `node scripts/acceptance.mjs`. Core tasks execute from the fresh installed files; logs and outputs stay outside them. Tests distinguish installed checker behavior and deterministic policy regression from real Agent behavior. Client loading and inspect/edit/publish-pause conversations remain mandatory manual checks; do not report them as passed from script tests. Exit 1 blocks; exit 2 requires review. Record real evidence in `templates/acceptance-record.md` outside the public delivery. Do not publish when mandatory acceptance remains unresolved.
+
+`evals/publisher-tasks.mjs`, `scripts/authorization.mjs`, `scripts/authorization.test.mjs` and `scripts/acceptance.test.mjs` provide the native pilot cases and regression model. None of them authorize or execute remote operations. No external evaluation tools or Skills are required. The pilot tests a candidate-directory installation only; a GitHub/archive/plugin install needs its actual route validated before support claims.
+
+## Required references
+
+Read only what is needed:
+
+- `references/repo-structure.md` for repository layout rules.
+- `references/authorization.md` for request modes, exact scope confirmation and push/Release separation.
+- `references/acceptance.md` for native task acceptance, fresh installation and evidence limits.
+- `references/pre-publish-flow.md` for the full publish flow and confirmation gates.
+- `references/readme-style.md` for the bilingual README style.
+- `references/readme-review.md` for evidence preparation, missing facts, semantic acceptance and fair comparisons.
+- `references/readme-checks.md` for static checker coverage, audience selection, report states and regression limits.
+- `examples/readme-visual/publisher-capability.md` for an approved illustration case, reusable layout practices and the boundary between general guidance and this product's specific choices.
+- `templates/readme-review-record.md` for a local internal review record, never public README text.
+- `references/readme-full-agent-evolution.md` only as a historical content example; it does not define the current framework.
+- `references/install-section.md` for skill installation instructions that README files should include.
+- `references/skill-completeness.md` before public release.
+- `references/platform-compatibility.md` before public release.
+- `references/publish-checklist.md` before publishing.
+- `references/security-checklist.md` before public release.
+- `references/github-workflow.md` for first-time GitHub publishing.
+- `references/update-workflow.md` for later updates.
+
+## Scripts
+
+Optional helper scripts:
+
+```bash
+node scripts/smoke-test.mjs
+node scripts/publish-check.mjs
+node scripts/se-quality.mjs
+node scripts/acceptance.mjs
+```
+
+The smoke test script is a local quality gate. It verifies that this skill's own files, references, templates, and publish-check script are coherent.
+
+The publish check script is a reporting gate only. It must never publish, push, commit, delete files, or mutate GitHub state. It reports a release gate (PASS/WARNING/FAIL) plus an engineering-hygiene score covering metadata, documentation, structure, security, and tooling. That score is not a README reader-quality score. Agree dimensions and a 10-point rubric before a writing comparison, retain the before/after case outputs, and apply the same rubric with evidence; never score a proposed result as already achieved.
+
+The se-quality script reports a separate software-engineering quality score (completeness, openness/extensibility, reusability, cohesion, coupling, robustness), plus advisory document-craftsmanship signals (no thin/placeholder sections, instructional phrasing, concrete specifics, low hedging language, encoded failure modes, anti-example lists, and runtime-neutral cross-agent phrasing) that judge how the docs read rather than merely whether sections exist. Like publish-check, it only reports and never mutates state. Each sub-metric is tagged deterministic or proxy so the score stays honest.
+
+Only when engineering assessment is selected: `publish-check` is the applicable Skill release gate — run it first. `se-quality` is optional and assumes that gate has passed; it does not re-detect blockers (secrets, broken references, missing license, unparseable scripts are caught by `publish-check`, not duplicated here). A high se-quality score is only meaningful once `publish-check` reports PASS.
+
+## Templates
+
+Use these as starting points, not rigid boilerplate:
+
+- `templates/README.md`
+- `templates/README.zh.md`
+- `templates/README.practical-tool.md`
+- `templates/README.practical-tool.zh.md`
+- `templates/README.hero.md`
+- `templates/README.hero.zh.md`
+- `templates/LICENSE-MIT`
+- `templates/gitignore`
+- `templates/acceptance-record.md`
+
+Use `templates/README.md` and `templates/README.zh.md` as the default Standard starting points. `README.md` is English by default for GitHub's repository homepage, and `README.zh.md` is the Chinese switch page. All six variants must follow `references/readme-style.md`, including the same ten-section order, two-column features, complete first-use path, actual components and approved author information. If a template differs, follow the authoritative standard and record the template mismatch for repair.
+
+Use `templates/README.practical-tool.md` and `templates/README.practical-tool.zh.md` for practical utilities needing richer scenarios, rule categories or before/after examples. Fit them inside the same framework; link long manuals and maintenance documents from Repository Structure. Hero changes the opening presentation, not section order or compatibility evidence.
+
+The README templates intentionally omit a limitations section by default.
+Use MIT for `LICENSE` unless the user requests another license.
+
+## Collaboration rule
+
+If the user asks for writing or README improvement, draft locally and discuss before pushing unless they explicitly say to sync or publish.
+
+If the user explicitly asks to both modify and publish, complete local preparation and tests, then obtain the concrete scope confirmation required by `references/authorization.md`. A generic publication request never waives that push checkpoint.
+
+Before consequential GitHub actions, explain:
+
+- target repository,
+- visibility,
+- branch,
+- files being committed,
+- expected result.
+
+For final publishing, provide the final pre-publish summary, including exact commits and candidate evidence. Reuse only an explicit confirmation of this unchanged scope; otherwise wait for confirmation before any remote write.
+
+## Safety boundaries
+
+- Do not ask the user to paste GitHub tokens.
+- Prefer `gh auth login` browser/device authorization.
+- Check for secrets, personal paths, local-only assumptions, and unsafe scripts before public release.
+- Do not publish private or user-specific memory files.
+- Do not force push unless the user explicitly requests it and understands the impact.

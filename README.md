@@ -1,10 +1,10 @@
-# GitHub Skill Publisher
+# GitHub Publisher
 
 English | [中文](./README.zh.md)
 
 ## Overview
 
-GitHub Skill Publisher helps you turn a local Skill into a GitHub repository you can share: write bilingual READMEs, review publication readiness, address findings, then publish with your authorization and verify the result.
+GitHub Publisher helps you turn a local Skill into a GitHub repository you can share: write bilingual READMEs, review publication readiness, address findings, then publish with your authorization and verify the result.
 
 ![Capability illustration: Skill preparation, pre-publication review, and GitHub publication; includes dependencies, compatibility, safety and rights checks](./assets/publisher-hero-v4.png)
 
@@ -14,12 +14,16 @@ It is for authors who have built a Skill and want to share it, with help organiz
 
 | Capability | What it helps you do |
 |---|---|
+| Analyze projects and engineering issues | Map a Skill or project's workflow, components and configuration; diagnose with source and native-test evidence, identify input provenance and disclose untested scope. |
 | Organize a Skill repository | Identify the entry point, supporting files and dependencies; separate material to share from local drafts and caches. |
 | Write bilingual READMEs | Understand the Skill's main purpose, then explain its features, installation, usage and structure so users know where to begin. |
 | Check publication readiness | Locate missing files, broken links, image problems, sensitive information, and identity or rights questions that need review. |
-| Publish to GitHub | With your explicit instruction to publish, prepare repository details, commit and push, then verify the remote result. Requires GitHub account access. |
+| Publish to GitHub | Prepare a concrete repository, branch, commit and action summary; push only after your explicit scope confirmation, then verify the result. Requires GitHub account access. |
+| Validate a candidate installation | Build a local candidate directory, install its files into a separate directory and run native core tasks, with content digests and logs. Client loading and conversations remain separate checks. |
 | Modify an existing Skill | Make the requested local changes and update affected descriptions; your instruction determines whether to publish. |
 | Review engineering quality | Assess structure, reuse and robustness to prioritize improvements; a score does not prove tested functionality or readable copy. |
+
+Project analysis follows the actual project type; ordinary projects do not need a Skill layout. The analysis workflow has local validation on a video-navigation Skill; other project types require their own acceptance. An analysis request does not automatically authorize edits or publication preparation.
 
 ## Installation
 
@@ -68,7 +72,13 @@ After installation, open the folder of the Skill you want to share and check whe
 
 > Make the README's installation instructions clearer, then sync the changes to GitHub once the checks pass.
 
-A request to modify files leads to local changes. An explicit request to modify and publish continues to publication after checks pass. Sensitive information, failed checks, unverified compatibility or an unclear repository target will pause the workflow for an explanation.
+A request to modify files leads to local changes. An explicit request to modify and publish prepares the changes and checks, then shows the exact repository, branch, commits and remote actions for your confirmation before pushing. Push approval does not include creating a Release unless that action and target were listed. Sensitive information, failed applicable required checks, unresolved required acceptance, unsupported compatibility claims or an unclear target pause publication.
+
+### Validate an installation before sharing
+
+> Run the native local acceptance pilot for this Skill. Check the delivered files and core tasks, and tell me which client or behavior checks have not actually run. Do not publish.
+
+The pilot uses existing Node.js and Git without external evaluation tools. It tests a candidate-directory installation; GitHub download installation and real client loading require separate verification.
 
 ### Check what should stay private
 
@@ -80,7 +90,9 @@ A request to modify files leads to local changes. An explicit request to modify 
 
 ## How It Works
 
-The Agent reads your Skill to understand its main purpose and files, then organizes the repository, writes the introduction and runs checks. It operates GitHub only when publication conditions are met and you have explicitly authorized publication.
+The default flow is short: understand the project and diff → run relevant release checks → show account, repository, branch, commits and exact actions → wait for your confirmation → publish and verify. Reuse satisfactory documentation and unchanged approved previews. Safety checks, existing project-required gates and concrete publication confirmation remain required.
+
+Engineering diagnosis, performance/Token evaluation, optimization and full installation acceptance are optional subprocesses. Select them only when requested or a concrete issue/material delivery change calls for them. Explain scope, expected work and stop point, act within existing authorization and obtain any missing permission. Return to the publication flow without chaining unrelated checks. See the [short publication flow](./references/pre-publish-flow.md).
 
 This is one standalone Skill, with no bundled sub-Skills. Its main components are:
 
@@ -89,22 +101,25 @@ This is one standalone Skill, with no bundled sub-Skills. Its main components ar
 | `SKILL.md` | The Agent entry point: work sequence, authorization and publication boundaries. |
 | `references/` | Detailed guidance for writing, installation, visuals, compatibility, safety and publication checks. |
 | `templates/` | Standard, Hero and Practical Tool READMEs, each in English and Chinese, for a regular introduction, a prominent opening presentation or a utility needing more scenarios. Also includes license, ignore-file and internal review-record templates. |
-| `scripts/` | Publication-readiness checks, engineering-quality analysis and checks of Publisher's own files and templates. |
-| `evals/` | Check scenarios and regression cases used when maintaining the rules. |
+| `scripts/` | Static publication checks, native acceptance, an authorization regression model, engineering analysis and self-checks. |
+| `evals/` | Document fixtures, an explicit candidate-delivery manifest and installed-tool task cases. |
 | `examples/` | An approved README illustration case with reusable practices and product-specific choices clearly separated. |
 
-Each check serves a different purpose:
+Select these tools by task; this is not an every-release checklist:
 
 - **Publication-readiness check**: inspects the current project's documentation, files, safety and Git state, producing `publish-check-report.json`. Results indicate a pass, required review or a blocker; the engineering-hygiene score is not permission to publish.
+- **Native acceptance pilot**: produces `acceptance-report.json` and retained candidate/install directories with logs. It verifies delivered content and executes installed script tasks; when full acceptance is selected, client discovery, live Agent conversations and its required OS checks remain explicit manual requirements. Required failures, errors or unexpected skips block; unresolved review returns a separate status and does not permit publication. The temporary directories are not an OS/network sandbox.
 - **Engineering-quality analysis**: produces `se-quality-report.json`, distinguishing directly verifiable items from advisory estimates. It supplements the publication check rather than replacing it.
 - **Publisher self-check**: validates this Skill's supporting files, templates and check tools, producing `smoke-test-report.json`. It cannot prove that another Skill works; other projects still need their own tests.
 
-The check tools write local reports. The Agent handles commits, pushes and repository creation according to your authorization. After automated checks, a person still needs to review product fit, examples, bilingual facts and the scope of visual evidence.
+During authorized validation, the check tools write local reports; inspect-only requests do not write into the target. The Agent follows the authorization contract for commits and remote actions. The regression model tests the policy, but cannot intercept another Agent's tool calls or prove that a conversation obeyed it. After automated checks, a person still needs to review product fit, examples, bilingual facts and the scope of visual evidence.
+
+Attribution checks distinguish ordinary examples and known standard license text from unresolved credits, preserving source reasons. An explicitly supplied external confirmation record can close unchanged content findings for a candidate directory; changes invalidate that record. This does not approve Git history or publication. See [review decisions](./references/review-decisions.md).
 
 ## Repository Structure
 
 ```text
-GitHub-skill-publisher/
+github-publisher/
 ├── SKILL.md                 # Agent entry point
 ├── references/              # Writing and publication guidance
 ├── templates/               # Three bilingual README styles and supporting templates
@@ -119,9 +134,9 @@ GitHub-skill-publisher/
 └── LICENSE                  # License
 ```
 
-Installation needs `SKILL.md` and its referenced guidance, templates and tools, not just the entry file. Generated reports are not required installation content: publication and engineering reports go into the project being checked; the Publisher self-check report goes into this Skill's directory.
+Installation needs `SKILL.md` and its referenced guidance, templates and tools, not just the entry file. Generated reports and `.publisher-pilot/` workspaces are not installation content: publication and engineering reports go into the project being checked; the Publisher self-check report goes into this Skill's directory.
 
-Further reading: [README writing standard](./references/readme-style.md), [copy review method](./references/readme-review.md), [checker coverage](./references/readme-checks.md), [illustration reference case](./examples/readme-visual/publisher-capability.md), and [GitHub workflow](./references/github-workflow.md).
+Further reading: [README writing standard](./references/readme-style.md), [copy review method](./references/readme-review.md), [checker coverage](./references/readme-checks.md), [illustration reference case](./examples/readme-visual/publisher-capability.md), [GitHub workflow](./references/github-workflow.md), [authorization contract](./references/authorization.md), and [native acceptance and its limits](./references/acceptance.md).
 
 ## License
 

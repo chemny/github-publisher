@@ -10,7 +10,7 @@
     {
       "id": 2,
       "prompt": "帮我优化这个 skill 的 README，先讨论，不要同步到 GitHub。",
-      "expected_output": "Drafts or discusses bilingual README improvements and does not commit or push.",
+      "expected_output": "Discusses bilingual README improvements without editing files, running acceptance, committing or pushing because the request explicitly says discussion first.",
       "files": []
     },
     {
