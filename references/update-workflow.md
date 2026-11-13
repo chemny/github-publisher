@@ -47,3 +47,5 @@ Update publish checklist
 ## Discussion-first rule
 
 Follow [authorization.md](authorization.md) as the single authority. Discuss/inspect means read-only, including no acceptance installs or target report writes. Edit-only means local changes and relevant validation, never remote writes. An explicit request to publish authorizes preparation and final review; it does not waive the concrete push checkpoint. Show exact repository, branch, commits/change summaries and actions, then wait for explicit confirmation. Reuse only the same unchanged confirmed scope. Push-only approval does not authorize a Release.
+
+发布前按 `authorization.md` 实际展示本次 README 正文并取得明确确认；可与发布范围合并确认，同一次发布内容未变不重复询问。

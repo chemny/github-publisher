@@ -130,7 +130,7 @@ Explain any difference between repository contents and what installation loads. 
 
 ### License
 
-State the actual license and link to the license file. Use MIT by default only when choosing a license for original work and the user has not specified another; do not overwrite an existing or upstream license by inference.
+State only the license and notices explicitly confirmed by the user, and link to the corresponding file. Do not default to MIT or any other license, including for original work. When license content is unconfirmed, stop at local preparation rather than inventing a public license section, restoring removed notices, or moving them elsewhere. Follow references/authorization.md for the content-confirmation requirement.
 
 Explain third-party materials, trademarks and upstream attribution boundaries where applicable. Do not imply that the repository license relicenses every referenced or bundled asset. Follow [review-decisions.md](review-decisions.md) for new or changed identity and attribution findings; reuse unchanged explicit scoped decisions rather than asking repeatedly. Do not automatically remove attributions or invent ownership.
 

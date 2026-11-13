@@ -11,6 +11,14 @@ Every release is checked; unchanged confirmed findings do not require another qu
 5. Rerun the check. Only unchanged keep decisions are reusable. Rewrite/remove decisions require actual authorized edits and a fresh scan; they are not warning suppressions.
 6. Let the user view recorded decisions on request. Revoke by setting `revoked: true`. Never silently reset or delete receipts.
 
+## 新增第三方署名或许可说明：聊天中明确确认
+
+发布内容中新增第三方作者署名、来源署名、版权行或许可说明时，必须在**聊天里的发布摘要**明确列出来源、涉及文件、拟公开的署名/许可内容及需要保留的条件，并询问用户是否同意。不能只放在附件、报告链接或上传清单里；尚未确认时不得发布，也不得把 Agent 自己的判断写成用户确认记录。
+
+笼统的“发布吧”“请发布”只表达发布意图，不能当成对新增第三方署名或许可说明的内容确认。用户须明确回应这些内容，例如“同意保留上述原作者署名和许可说明”；若聊天摘要清楚列出并询问内容确认与推送两个事项，用户可以一次明确确认两者，无需拆成多轮。已获明确内容确认且来源、署名和许可条件未变时，复用确认，不反复问。
+
+用户不接受所需署名或许可条件时，先替换/移除对应材料或停止发布，不能擅自删掉必须保留的声明、冒认原创或更改他人授权。
+
 ## Receipt Schema
 
 ```json

@@ -18,7 +18,7 @@ It is for authors who have built a Skill and want to share it, with help organiz
 | Organize a Skill repository | Identify the entry point, supporting files and dependencies; separate material to share from local drafts and caches. |
 | Write bilingual READMEs | Understand the Skill's main purpose, then explain its features, installation, usage and structure so users know where to begin. |
 | Check publication readiness | Locate missing files, broken links, image problems, sensitive information, and identity or rights questions that need review. |
-| Publish to GitHub | Prepare a concrete repository, branch, commit and action summary; push only after your explicit scope confirmation, then verify the result. Requires GitHub account access. |
+| Publish to GitHub | Show the pending README for your approval, Chinese first when available, and confirm the concrete repository, branch, commits and actions before publishing; these approvals can be combined once. Then verify the result. Requires GitHub account access. |
 | Validate a candidate installation | Build a local candidate directory, install its files into a separate directory and run native core tasks, with content digests and logs. Client loading and conversations remain separate checks. |
 | Modify an existing Skill | Make the requested local changes and update affected descriptions; your instruction determines whether to publish. |
 | Review engineering quality | Assess structure, reuse and robustness to prioritize improvements; a score does not prove tested functionality or readable copy. |
@@ -38,13 +38,13 @@ Use an Agent client that can read Skills and run local commands. Prepare the cor
 | Git | Used to inspect file changes, repository state and commit history. |
 | GitHub CLI (optional) | Use `gh` with an appropriately authorized account when operating GitHub repositories. |
 
-Local checks have run on macOS. Actual installation and use on Windows, Linux and different Agent clients still need verification. If a step cannot be completed in your environment, the Agent should explain why. See [compatibility details](./references/platform-compatibility.md).
+The Agent checks the tools needed for your task before use, guides you through missing prerequisites, and verifies the environment after setup. Optional tools are prepared only when needed.
 
 ### Quick Installation
 
 Send this request to the Agent you are using:
 
-> Install this Skill for me: https://github.com/chemny/GitHub-skill-publisher . Check Node.js and Git first and prepare any missing core tools, then install the Skill and verify that the client can find and load it. Leave GitHub login until I need to publish.
+> Install this Skill for me: https://github.com/chemny/github-publisher . Check Node.js and Git first and prepare any missing core tools, then install the Skill and verify that the client can find and load it. Leave GitHub login until I need to publish.
 
 When finished, ask the Agent to report the installation location, whether loading works, and any unmet requirements.
 

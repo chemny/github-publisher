@@ -12,7 +12,7 @@ Use [pre-publish-flow.md](pre-publish-flow.md) for the short default. This is a 
 - [ ] `README.zh.md` exists.
 - [ ] Both READMEs embed representative actual screenshots/cases, or an approved generated illustration based on verified workflow and pain points when suitable material is unavailable. If neither form is possible, both state the actual omission reason; see [readme-visuals.md](readme-visuals.md).
 - [ ] `LICENSE` exists.
-- [ ] Existing license and third-party obligations are preserved; choose a license for missing original content only with the relevant user decision.
+- [ ] 所有拟公开的许可、协议、版权及署名声明均已向用户展示并明确确认；原创内容也不默认选择 MIT 等协议。用户要求删除的内容未被换位置保留；未确认时停留在本地准备阶段，不为通过检查擅自补写许可。
 - [ ] `.gitignore` exists if generated files may appear.
 - [ ] Folder names are portable.
 - [ ] Tracked files have been reviewed with Git, not only filtered by `.gitignore`.
@@ -93,6 +93,10 @@ Use [pre-publish-flow.md](pre-publish-flow.md) for the short default. This is a 
 
 ## README
 
+- [ ] 每次发布前已实际展示当前待发布版本的 README 正文并取得用户明确确认；有中文时优先完整中文版，同时提供英文版供查看。
+- [ ] 展示不是只给文件路径／链接、检查结论、截图或摘要；文档排队／打开失败／正文截断未被标为已展示全文。
+- [ ] README 内容确认可与发布范围一次合并；同一次发布内容未变不重复询问，正文、关键链接或内嵌图片变化后重新展示并确认，未跨发布复用其他版本的确认。
+
 - [ ] Both languages follow the default ten sections and order (or fold a labelled capability illustration into Overview as allowed by the standard) in [readme-style.md](readme-style.md), or an explicitly requested pass-through exception is documented without a compliance claim.
 - [ ] Overview makes the product, target users, problem and useful outcome understandable from the first screen.
 - [ ] Preview / 效果预览 is second for screenshots/cases; a labelled generated capability illustration may be embedded in Overview without that heading, with the other sections unchanged. Legacy 程序或页面截图 / Program or Page Screenshot labels are handled as migration exceptions, not alternative defaults.
@@ -113,7 +117,7 @@ Use [pre-publish-flow.md](pre-publish-flow.md) for the short default. This is a 
 - [ ] How It Works gives the complete included sub-Skill/component inventory, responsibilities, entry point and supported collaboration/direct-use routes.
 - [ ] Included components, optional plugins and external dependencies are distinguished; diagrams explain a real process when useful.
 - [ ] Repository Structure matches actual principal files, sorts by functional importance with core content first and README/license last, explains installed versus checkout contents and links detailed documentation.
-- [ ] License states the actual original/third-party rights boundaries; default MIT does not override existing or upstream licenses.
+- [ ] 许可章节只陈述用户明确确认的内容；未默认采用 MIT 或其他协议，未擅自恢复、搬移或替换用户要求删除的声明。未确认时不发布。
 - [ ] About Me is last and uses an approved identity suited to the publication; when contact is intended, its public route is approved or recorded unresolved. Personal facts are not hard-coded in generic templates and missing facts were not invented.
 - [ ] New or changed identity/attribution findings follow review-decisions.md; unchanged scoped approvals are reused.
 - [ ] No update history, upgrade/migration/fix records, release procedures, developer logs or authoring conversation appear anywhere in the README body.
@@ -148,17 +152,15 @@ Use [pre-publish-flow.md](pre-publish-flow.md) for the short default. This is a 
 ## Portability
 
 - [ ] Compatibility with Codex and Claude Code has been tested where possible.
-- [ ] OS compatibility with macOS and Windows has been tested where possible or explicitly reviewed when direct testing is unavailable.
-- [ ] Missing macOS or Windows validation is reported to the user before publishing and treated as a pause point.
+- [ ] Skill 开箱即用：安装及必要配置后能够加载、完成代表性核心任务，无需用户修代码或补私有文件。
+- [ ] Windows／macOS 至少一端有安装、加载及核心任务实测证据；另一端完成兼容审查和必要适配，可不实测。未受影响的有效证据可复用，详见 [platform-compatibility.md](platform-compatibility.md)。
+- [ ] 缺少上述证据、审查或必要适配，以及已知核心阻断，均在发布前处理；第二端仅未实测但审查适配完成不构成暂停点。
 - [ ] Linux compatibility is treated as optional unless the user, repository, or documented runtime explicitly requires Linux.
 - [ ] Windows compatibility was considered when scripts, installers, path handling, shell commands, browser automation, filesystem operations, or external CLIs are involved.
 - [ ] Windows requirements such as Node.js, Git, Python, or GitHub CLI being available in `PATH` are documented when relevant.
 - [ ] POSIX-only commands such as `bash`, `sh`, `sed`, `grep`, `xargs`, `cp`, `mv`, `rm`, or `chmod` are avoided in default flows or isolated behind documented adapters.
-- [ ] Any untestable platform is marked `Not tested` with a reason.
-- [ ] Any incompatible platform is marked `Unsupported` and reported to the user before publishing.
-- [ ] Any partially compatible platform is marked `Partial` with exact limitations.
-- [ ] README includes a concise compatibility sentence when publishing for broad use.
-- [ ] Untested platforms are marked `Not tested`, not implied as supported.
+- [ ] 验证状态、实测／审查依据和剩余缺口只记内部发布报告；静态审查不冒充实测。
+- [ ] README 只保留用户安装、配置和使用所需的信息，不放验证状态、内部缺口或测试矩阵；实际必要条件不隐瞒，已知核心阻断不靠文案掩盖。
 - [ ] No absolute local paths such as `/Users/...`.
 - [ ] No user-specific memory files.
 - [ ] No local tool directories or local install assumptions unless explicitly documented as optional examples.
@@ -176,8 +178,10 @@ Use [pre-publish-flow.md](pre-publish-flow.md) for the short default. This is a 
 ## Final publish confirmation
 
 - [ ] All content, including README files, has been generated and checked.
+- [ ] 当前 README 已展示并得到用户明确确认；未完成时停留在本地准备阶段，未执行远程发布。
 - [ ] Final pre-publish summary was shown to the user.
 - [ ] Summary included target repository, remote URL, branch, visibility, file list, README status, security result, third-party/copyright review result, identity/attribution metadata review result, completeness result, dependency result, compatibility result, GitHub metadata, warnings, and remaining risks.
+- [ ] 拟公开的全部许可／协议内容与位置已明确确认；未采用默认许可，未沿用用户已撤回的许可决定或旧候选。
 - [ ] Summary included the README change-impact result: updated / no-impact with reason / blocked until README is updated.
 - [ ] Summary included the preview paths and approval scope, or the exact omission reason for both languages. Missing image plus missing reason blocks release.
 - [ ] Explicit publish authorization exists for every remote action under [authorization.md](authorization.md); local commits were prepared only as authorized. The user saw repository URL, branch, visibility, exact commits/change summaries, candidate digest and action list before confirming.

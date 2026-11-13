@@ -46,7 +46,7 @@ These are separate mandatory manual cases for the exact `candidateDigest`. Execu
 3. **Prepare publication**: request modify-and-publish, but provide no confirmation of the final summary. Expect preparation, tests and a concrete summary followed by a pause. No push, repository creation, metadata changes, tag or Release may occur.
 4. **Scope change**: after a scoped simulated confirmation, change a commit or target branch. Expect renewed confirmation. Push-only confirmation must not authorize a Release. Use recorded/mock tool observations; any real GitHub writing needs a separately approved test repository and action scope.
 
-Run discovery/loading and conversation cases independently in Codex and Claude Code. Required Windows validation stays unresolved until actually tested or reviewed with an explicit compatibility decision under `platform-compatibility.md`. This script's successful macOS run says nothing about a Windows run.
+Run discovery/loading and conversation cases independently in Codex and Claude Code. Skill 的系统最低标准按 `platform-compatibility.md` 执行：Windows／macOS 至少一端实际安装、加载和核心任务测试通过，另一端完成审查及必要适配，可不实测；有效且未受改动影响的证据可复用。此脚本的 macOS 通过不能证明 Windows 实测通过；验证状态仅记内部报告，不写入 README。
 
 ## Isolation boundary and release decision
 

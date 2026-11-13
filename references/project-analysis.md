@@ -21,9 +21,27 @@ For each consequential finding include:
 
 Missing public README/license/material can block a polished release, but is separate from whether the program executes. Existing copyright or identity must be reviewed rather than invented or automatically removed. Do not make source-supported perf observations into invented time/Token savings.
 
+## Skill 全面诊断：规则与流程的 7 类检查
+
+用户选择全面诊断时，将以下 7 类纳入检查范围；不适用项注明原因。局部诊断只查相关项。快速发布不默认执行整套检查，仅在出现具体冲突、误阻断等问题时定位对应项，不自动扩大为全面诊断。
+
+| 类别 | 检查重点 | 轻量验证方式 |
+|---|---|---|
+| 冗余规则 | 重复要求、过时说明、无独立作用的步骤或参考；区分必要提醒与无效重复 | 标出重复位置及各自作用；获准精简后，用同一任务核对原有必要行为是否保持 |
+| 冲突规则 | 入口与参考要求相反、允许与禁止并存、优先级和适用范围不清 | 引用冲突原文，选会触发冲突的场景，核对实际选择和应遵循的规则 |
+| 过度门禁 | 简单更新强制全套检查、已确认且范围未变仍反复询问、无关缺项阻断任务 | 成对检查应放行和应阻断的场景，既验证不误拦，也验证必要底线仍生效 |
+| 触发与范围 | 启用条件、任务路由、授权边界是否清楚，是否擅自扩展任务 | 对比检查／修改／发布等不同请求，核对所选流程和允许的动作 |
+| 上下文加载 | 是否按需读取、关键信息是否可发现、有无重复读取或强制加载无关资料 | 跟踪代表性任务的必要读取路径；有实际记录才报告调用或 Token 用量，不把少读直接等同于质量保持 |
+| 执行闭环 | 输入、前置条件、完成标准、失败出口、重试及停止条件是否明确 | 检查正常、信息缺失及执行失败场景，核对能否完成、必要时澄清或正确停止，避免无界重试 |
+| 判断与证据 | 完成／通过／可发布结论是否有对应证据，是否混淆静态、模拟、实测及历史结果 | 将结论逐项对照原始证据，确认版本和适用范围；缺失证据记为未验证，不当成通过 |
+
+先做文本和流程检查；规则长、重复或保守本身不是缺陷，须说明实际影响。文本矛盾可据原文确认，但未经行为复现不能声称已经造成误操作；推演和模拟须明确标注。实际场景验证只在授权范围内进行，优先选择能解决关键疑问的少量场景，不默认开启多轮模型对照或新增工具。没有适用运行环境时，保留为有依据的风险和待验证项。
+
+发现问题仍按本节既有格式记录位置、证据、影响、最小修复及回归标准，不新增评分体系或重复报告。诊断不授权修改；不能以精简或降低 Token 为由削弱安全、许可、隐私和真实操作授权底线。
+
 ## 3. Use native verification carefully
 
-Read test bodies or scripts first to determine side effects, prerequisites and expected runtime. If authorized, run the existing deterministic suite from an unchanged project copy with caches disabled, outputs in scratch and globals redirected to test-local locations. Record command, exit code, counts and evidence. Run a small representative core or error path where it helps resolve a material question. Do not modify input data or tests merely to pass.
+Read test bodies or scripts first to determine side effects, prerequisites and expected runtime. 获授权后优先执行与当前问题或改动相关的测试；只有明确要求全面回归，或相关问题确需完整套件才能验证时，才运行完整套件，并说明必要性。Run tests from an unchanged project copy with caches disabled, outputs in scratch and globals redirected to test-local locations. Record command, exit code, counts and evidence. Run a small representative core or error path where it helps resolve a material question. Do not modify input data or tests merely to pass.
 
 A synthetic render or programmatic output test proves mechanics under that input, not real content semantics, human visual quality, universal platform support or a successful publication. If an actual render is too costly or unavailable, record what is not verified without fabricating failures.
 

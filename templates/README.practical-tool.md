@@ -109,7 +109,7 @@ The Agent will tell you whether it is installed, can be loaded or used, and what
 
 {{Necessary third-party rights explanation and real documentation link.}}
 
-<!-- Check the existing license; do not assume it relicenses third-party assets. Choose MIT only for applicable original work when no other license was specified. -->
+<!-- Check the existing license; do not assume it relicenses third-party assets. Use MIT only after the user explicitly selects it for applicable original work. -->
 
 ## About Me
 

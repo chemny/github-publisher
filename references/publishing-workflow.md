@@ -29,7 +29,7 @@ Follow `references/authorization.md` as the single authorization authority. Insp
 
 Local commits may be prepared during authorized implementation; do not commit merely to complete a local edit request. Never push, create a repository, update remote metadata, tag remotely or publish a Release based only on a generic intention to publish. Checks and attribution receipts cannot authorize these actions. For an inspect-only check, do not write reports into the target; use chat or an authorized evidence location.
 
-Always run the relevant pre-publish checks and provide the final concrete summary before remote confirmation.
+Always run the relevant pre-publish checks, display the current README body and provide the final concrete summary before remote confirmation.
 
 ## Release surface normalization rule
 
@@ -129,13 +129,13 @@ Optional procedures below: select only for a concrete need; return to the defaul
    - For third-party and identity findings, first compare local confirmed decisions. Do not remove content automatically. Ask only about unmatched or changed findings, then record the user's explicit decision as described in `references/review-decisions.md`.
    - Check whether the skill is complete and whether it has hard dependencies on other skills or private local resources.
    - If a dependency is required, document it clearly or bundle/adapter-isolate it before publishing.
-10. Select compatibility review only when platform behavior/support claims change or the user/project requires it; use references/pre-publish-flow.md and references/platform-compatibility.md to choose claimed/affected scope.
+10. Apply references/pre-publish-flow.md and references/platform-compatibility.md: published Skills must be usable after documented installation/setup, with Windows/macOS at least one actually tested for installation, loading and core tasks, and the other reviewed and adapted as needed. Reuse valid unaffected evidence; select deeper review only for affected behavior/claims or an explicit requirement. Keep verification status in internal reports; README contains only useful installation, configuration and usage information.
    - Select declared/affected clients; Codex and Claude Code are available review targets, not an automatic matrix for every release.
    - Select declared/affected operating systems. Platform-sensitive changes require relevant evidence; an unchanged documentation-only release does not require a new OS matrix.
    - Linux compatibility is optional. Test or review it when it is easy or relevant, but do not treat missing Linux validation as a release blocker by default.
    - If a required selected platform cannot be verified, disclose the untested claim and resolve that release requirement before publication; never invent support.
    - If a selected required platform is incompatible or partial, tell the user and resolve its support claim or obtain the explicit compatibility decision before publishing.
-11. Present a final pre-publish summary after all content, including README files, has been generated and checked.
+11. Present a final pre-publish summary after all content, including README files, has been generated and checked. Display the current README body first and obtain content confirmation under `references/authorization.md`; it may be merged with the scope confirmation, and an unchanged confirmation within the same release is not asked again.
    - Include target repository, remote URL, branch, visibility, files to publish, README status, preview paths and approval status (or the concrete omission reason), security result, third-party/copyright review result, completeness result, dependency result, compatibility result, GitHub metadata, warnings, and remaining risks. Report the checker's readmeVisuals for both languages; never silently dismiss a missing-image warning as no UI.
    - Show the captured screenshot to the user before publishing.
    - Include applicable check results; include native acceptance/client results only when required or selected, with unresolved scope explicit. Follow `references/authorization.md`: show the exact commit list, repository, branch, candidate digest and action scope, then obtain explicit human confirmation before remote operations.
@@ -209,7 +209,7 @@ Use `templates/README.md` and `templates/README.zh.md` as the default Standard s
 Use `templates/README.practical-tool.md` and `templates/README.practical-tool.zh.md` for practical utilities needing richer scenarios, rule categories or before/after examples. Fit them inside the same framework; link long manuals and maintenance documents from Repository Structure. Hero changes the opening presentation, not section order or compatibility evidence.
 
 The README templates intentionally omit a limitations section by default.
-Use MIT for `LICENSE` unless the user requests another license.
+Use a license only after explicit user confirmation under `references/authorization.md`; do not default to MIT.
 
 ## Collaboration rule
 
@@ -234,3 +234,5 @@ For final publishing, provide the final pre-publish summary, including exact com
 - Check for secrets, personal paths, local-only assumptions, and unsafe scripts before public release.
 - Do not publish private or user-specific memory files.
 - Do not force push unless the user explicitly requests it and understands the impact.
+
+发布前按 `authorization.md` 实际展示本次 README 正文并取得明确确认；可与发布范围合并确认，同一次发布内容未变不重复询问。

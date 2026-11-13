@@ -7,7 +7,7 @@
 From the target repository:
 
 ```bash
-node /path/to/publisher/scripts/publish-check.mjs --json --report=publish-check-report.json
+node /path/to/publisher/scripts/publish-check.mjs --json --visibility=public --report=publish-check-report.json
 ```
 
 The default audience is ordinary Agent Skill users. For a developer-facing application, CLI or library whose actual installation uses commands, select the applicable audience:
@@ -16,7 +16,13 @@ The default audience is ordinary Agent Skill users. For a developer-facing appli
 node /path/to/publisher/scripts/publish-check.mjs --readme-audience=developer
 ```
 
-This changes installation-method checks, not the ten-section framework, links, visual evidence, safety or manual review requirements. Unknown audience values fail. Reviewers select the audience from actual product facts, not to hide an incompatible installation flow.
+For an ordinary application, CLI or library that is not a Skill, use `--profile=generic`: it requires only `README.md` and `LICENSE` and skips the Skill layout, README framework and bilingual checks. Secrets, local paths, environment files, third-party and identity review, Git history identity and visibility-scoped decision reuse still run. The project's own README conventions and tests apply.
+
+```bash
+node /path/to/publisher/scripts/publish-check.mjs --profile=generic --visibility=public --no-report --json
+```
+
+`--readme-audience` changes installation-method checks, not the ten-section framework, links, visual evidence, safety or manual review requirements. Unknown audience values fail. Reviewers select the audience from actual product facts, not to hide an incompatible installation flow.
 
 `--allow-legacy-readme` is for an explicitly authorized pass-through. It reports structural and format departures as warnings without claiming the new framework is satisfied. Broken local links, unresolved ordinary-user scaffolding, retained writer guidance, broken or missing visual evidence and safety failures are not waived. Developer code examples with template-like syntax produce a warning for manual review instead of automatically classifying all such syntax as unfinished prose. `--readme-no-impact` concerns reviewed change impact only; it does not skip README checks.
 
@@ -47,3 +53,5 @@ node scripts/smoke-test.mjs
 [readme-check-cases.json](../evals/readme-check-cases.json) contains frozen synthetic document contracts, not actual product outputs. The suite checks both useful acceptance and precise diagnostics for negative cases. A negative case cannot pass merely because an unrelated failure exists. The reader tests also check template alignment with the authority. CI runs these on its configured operating systems; local results do not prove that remote Windows/Linux jobs have run.
 
 Smoke checks the actual repository, including its current formal README. It can fail while unit/document fixtures pass when the repository has not yet been brought into line with the standard. Report and fix that release-surface gap rather than weakening the checks or treating the fixture score as release readiness.
+
+For private repositories use `--visibility=private`; never guess visibility. Omitted visibility disables Git-scoped approval reuse. For read-only inspection use `--no-report --json`. Use `--base=<commit>` for an explicit release baseline; otherwise the local upstream is used when present. No network fetch is performed.

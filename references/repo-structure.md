@@ -42,7 +42,7 @@ README.zh.md
 LICENSE
 ```
 
-If the user does not specify a license, create an MIT `LICENSE`.
+If no license has been explicitly confirmed, keep license selection pending under `authorization.md`; do not generate a default license.
 
 Optional when useful:
 

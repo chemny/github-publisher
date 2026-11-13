@@ -62,3 +62,5 @@ gh repo view <owner>/<repo> --json url,visibility,defaultBranchRef,description
 ```
 
 Return the GitHub URL to the user.
+
+发布前按 `authorization.md` 实际展示本次 README 正文并取得明确确认；可与发布范围合并确认，同一次发布内容未变不重复询问。

@@ -6,3 +6,7 @@ build/
 
 acceptance-report.json
 .publisher-pilot/
+
+publish-check-report.json
+smoke-test-report.json
+se-quality-report.json
