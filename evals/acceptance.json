@@ -61,7 +61,8 @@
         "scripts/authorization.test.mjs",
         "scripts/acceptance.test.mjs",
         "scripts/review-findings.test.mjs",
-        "scripts/candidate-review.test.mjs"
+        "scripts/candidate-review.test.mjs",
+        "scripts/release-boundaries.test.mjs"
       ],
       "timeoutMs": 60000
     }
@@ -80,12 +81,12 @@
     {
       "id": "windows-install-and-tasks",
       "required": true,
-      "instruction": "Not executed by this runner. Verify fresh installation and core tasks on Windows for the exact candidate, or report the unsupported/untested scope and obtain an explicit compatibility decision before publication."
+      "instruction": "Not executed by this runner. Apply references/platform-compatibility.md: at least one of Windows/macOS must have actual installation, loading and representative core-task evidence; the other must complete compatibility review and necessary adaptation without requiring runtime testing. Reuse valid unaffected evidence. Record runtime versus review status and gaps only in the internal report; do not mark this manual case PASS from automated macOS tests alone."
     },
     {
       "id": "release-review-and-confirmation",
       "required": true,
-      "instruction": "Complete semantic, visual, rights and compatibility review. Show repository, branch, visibility, exact commits, candidate digest and actions; obtain explicit push confirmation. Push approval alone does not approve creating a Release."
+      "instruction": "Display the current README body and obtain explicit content confirmation under references/authorization.md. Complete semantic, visual, rights and compatibility review. Show repository, branch, visibility, exact commits, candidate digest and actions; obtain explicit push confirmation. Push approval alone does not approve creating a Release."
     }
   ]
 }

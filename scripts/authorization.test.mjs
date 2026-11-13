@@ -47,3 +47,15 @@ test('active workflow documents do not retain unconditional no-second-confirmati
     assert.match(body, /authorization\.md/, rel);
   }
 });
+
+test('release instructions require actual README display and explicit approval before publication', () => {
+  for (const rel of ['SKILL.md', 'references/pre-publish-flow.md', 'references/authorization.md', 'references/publish-checklist.md']) {
+    const body = fs.readFileSync(new URL(`../${rel}`, import.meta.url), 'utf8');
+    assert.match(body, /每次发布[\s\S]*?实际展示[\s\S]*?README[\s\S]*?明确确认/, rel);
+    assert.match(body, /完整中文|完整中文版/, rel);
+    assert.match(body, /路径[／/]链接|路径／链接|路径\/链接|路径.*链接/, rel);
+    assert.match(body, /同一次发布[\s\S]*?不重复询问/, rel);
+  }
+  const contract = fs.readFileSync(new URL('../references/authorization.md', import.meta.url), 'utf8');
+  assert.match(contract, /未展示或未明确确认时[\s\S]*?停止在本地准备阶段/);
+});

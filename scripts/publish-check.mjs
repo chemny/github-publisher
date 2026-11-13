@@ -11,6 +11,7 @@ import { inspectAttribution } from "./review-findings.mjs";
 import { candidateDigest, loadCandidateReview } from "./candidate-review.mjs";
 
 const args = process.argv.slice(2);
+const noReport = args.includes("--no-report");
 const jsonOnly = args.includes("--json");
 const allowLegacyReadme = args.includes("--allow-legacy-readme") || args.includes("--pass-through-readme");
 const allowReadmeUnchanged = args.includes("--readme-no-impact") || args.includes("--allow-readme-unchanged");
@@ -20,7 +21,7 @@ const reportPath = path.resolve(root, reportPathArg);
 // A report may replace this tool's prior report, never an existing payload file.
 let existingReport;
 try { existingReport = fs.lstatSync(reportPath); } catch (error) { if (error.code !== "ENOENT") throw error; }
-if (existingReport) {
+if (existingReport && !noReport) {
   let owned = false;
   try {
     const st = fs.lstatSync(reportPath);
@@ -37,6 +38,13 @@ const readmeAudience = args.find(arg => arg.startsWith("--readme-audience="))?.s
 if (!["agent", "developer"].includes(readmeAudience)) {
   results.push({ level: "FAIL", title: "Invalid README audience", detail: "Use --readme-audience=agent or --readme-audience=developer." });
 }
+
+// generic: ordinary app/CLI/library. Skips Skill layout and the README framework; safety, rights and identity scans still run.
+const profile = args.find(arg => arg.startsWith("--profile="))?.split("=")[1] ?? "skill";
+if (!["skill", "generic"].includes(profile)) {
+  results.push({ level: "FAIL", title: "Invalid profile", detail: "Use --profile=skill or --profile=generic." });
+}
+const generic = profile === "generic";
 
 const visibility = args.find((arg) => arg.startsWith("--visibility="))?.slice(13);
 const digest = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -117,15 +125,16 @@ function skillVersionFromFrontmatter(block) {
 
 function git(args) {
   try {
-    return execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+    const output = execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    return args.includes("-z") ? output : output.trim();
   } catch {
     return "";
   }
 }
 
 function listFiles() {
-  const gitVisible = git(["ls-files", "--cached", "--others", "--exclude-standard"])
-    .split("\n")
+  const gitVisible = git(["ls-files", "--cached", "--others", "--exclude-standard", "-z"])
+    .split("\0")
     .filter(Boolean)
     .filter((rel) => exists(rel));
   if (gitVisible.length > 0) return [...new Set(gitVisible)];
@@ -144,18 +153,31 @@ function listFiles() {
   return out;
 }
 
-const trackedFiles = git(["ls-files"]).split("\n").filter(Boolean);
+const trackedFiles = git(["ls-files", "-z"]).split("\0").filter(Boolean);
 try { contentDigest = candidateDigest(root, { reportPath }); }
 catch (error) { if (args.some(a => a.startsWith("--candidate-review="))) add("WARNING", "Candidate review unavailable", error.message); }
 const files = listFiles();
 const candidateReviewFile = args.find(a => a.startsWith("--candidate-review="))?.slice("--candidate-review=".length);
 candidateReview = loadCandidateReview(root, candidateReviewFile && path.resolve(root, candidateReviewFile), contentDigest);
 if (candidateReview.status === "invalid") add("WARNING", "Invalid candidate review record", `Content review reuse disabled: ${candidateReview.reason}`);
+let releaseChanges = [];
+const explicitBase = args.find(a => a.startsWith('--base='))?.slice(7);
+const releaseBase = explicitBase || git(['rev-parse','--verify','@{upstream}']);
+if (releaseBase) {
+ try { releaseChanges = execFileSync('git', ['diff','--name-only','-z',releaseBase,'HEAD','--'], {cwd:root,encoding:'utf8',stdio:['ignore','pipe','pipe']}).split('\0').filter(Boolean); }
+ catch { add('FAIL','Invalid release baseline','Resolve --base or the local upstream before release checks.'); }
+} else if (git(['rev-parse','--verify','HEAD'])) {
+ add('WARNING','Release baseline unavailable','No upstream or --base; committed README impact remains unverified. Supply --base before claiming release checks complete.');
+ // No baseline: retain the warning rather than pretending all README files were updated.
+}
+try { execFileSync('git',['--version'],{stdio:'ignore'}); }
+catch { add('WARNING','Git unavailable','Git history, tracked files and release diff are not verified. Install Git with authorization and rerun before Git publication.'); }
+if (!['public','private'].includes(visibility)) add('WARNING','Visibility not specified','Git-scoped content approvals cannot be reused; pass --visibility=public or private after verifying the target.');
 const changedFiles = [
-  ...git(["diff", "--name-only", "HEAD", "--"]).split("\n").filter(Boolean),
-  ...git(["ls-files", "--others", "--exclude-standard"]).split("\n").filter(Boolean),
+  ...releaseChanges,
+  ...git(["diff", "--name-only", "-z", "HEAD", "--"]).split("\0").filter(Boolean),
+  ...git(["ls-files", "--others", "--exclude-standard", "-z"]).split("\0").filter(Boolean),
 ]
-  .filter((rel) => exists(rel) || trackedFiles.includes(rel))
   .filter((rel) => !/(?:^|\/)(?:publish-check-report|smoke-test-report|se-quality-report)\.json$/i.test(rel));
 const changedFileSet = new Set(changedFiles);
 const readmeChanged = changedFileSet.has("README.md") || changedFileSet.has("README.zh.md") || changedFileSet.has("README.en.md");
@@ -171,7 +193,7 @@ const readmeImpactRules = [
 ];
 const readmeImpactFiles = changedFiles.filter((rel) => readmeImpactRules.some(([pattern]) => pattern.test(rel)));
 const readmePairUpdated = changedFileSet.has("README.md") && changedFileSet.has("README.zh.md");
-if (readmeImpactFiles.length > 0 && !(allowLegacyReadme ? readmeChanged : readmePairUpdated)) {
+if (!generic && readmeImpactFiles.length > 0 && !(allowLegacyReadme ? readmeChanged : readmePairUpdated)) {
   const detail = `Changed files that may affect README content: ${readmeImpactFiles.slice(0, 12).join(", ")}${readmeImpactFiles.length > 12 ? ", ..." : ""}. Update README.md and README.zh.md, or rerun with --readme-no-impact only after reviewing the diff and documenting why README does not need to change.`;
   if (allowReadmeUnchanged) {
     add("WARNING", "README unchanged after explicit no-impact review", detail);
@@ -188,7 +210,7 @@ const isMarketplace = exists(".claude-plugin/marketplace.json");
 let marketplace = null;
 const requiredFiles = isMarketplace
   ? [".claude-plugin/marketplace.json", "README.md", "LICENSE"]
-  : ["SKILL.md", "README.md", "LICENSE"];
+  : generic ? ["README.md", "LICENSE"] : ["SKILL.md", "README.md", "LICENSE"];
 for (const rel of requiredFiles) {
   if (!exists(rel)) add("FAIL", "Missing required file", rel);
 }
@@ -217,7 +239,7 @@ const hasReadme = exists("README.md");
 const hasChineseReadme = exists("README.zh.md");
 const hasLegacyEnglishReadme = exists("README.en.md");
 
-if (hasReadme) {
+if (hasReadme && !generic) {
   const readme = read("README.md");
   const readmeTopLines = readme.split(/\r?\n/).slice(0, 30);
   const readmeTop = readmeTopLines.join("\n");
@@ -247,7 +269,7 @@ if (hasReadme) {
 }
 
 for (const rel of ["README.md", "README.zh.md"]) {
-  if (!exists(rel)) continue;
+  if (generic || !exists(rel)) continue;
   const content = read(rel);
 
   const internalReadmePhrases = [
@@ -281,7 +303,7 @@ if (!exists(".gitignore")) {
   }
 }
 
-if (exists("SKILL.md")) {
+if (!generic && exists("SKILL.md")) {
   const skill = read("SKILL.md");
   const frontmatter = skill.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!frontmatter) {
@@ -460,7 +482,7 @@ if (isMarketplace && marketplace) {
   fmName = String(marketplace.name ?? "").trim();
   fmDescription = String(marketplace.description ?? "").replace(/\s+/g, " ").trim();
   fmVersion = String(marketplace.version ?? "").trim();
-} else if (exists("SKILL.md")) {
+} else if (!generic && exists("SKILL.md")) {
   const skill = read("SKILL.md");
   const fm = skill.match(/^---\n([\s\S]*?)\n---/);
   const block = fm ? fm[1] : "";
@@ -492,7 +514,7 @@ if (fmVersion && !semverOk) {
 // 3. SKILL.md body weight — bloated SKILL.md hurts load and triggering.
 // N/A for a marketplace repo (no root SKILL.md), so treat as satisfied there.
 const SKILL_BODY_BUDGET = 400;
-const skillWeightOk = isMarketplace ? true : skillBodyLines > 0 && skillBodyLines <= SKILL_BODY_BUDGET;
+const skillWeightOk = isMarketplace || generic ? true : skillBodyLines > 0 && skillBodyLines <= SKILL_BODY_BUDGET;
 if (!isMarketplace && skillBodyLines > SKILL_BODY_BUDGET) {
   add("WARNING", "SKILL.md is heavy", `${skillBodyLines} non-empty body lines (budget ${SKILL_BODY_BUDGET}); push detail into references/.`);
 }
@@ -511,7 +533,7 @@ const docRefText = files
   })
   .join("\n");
 const referencedPaths = new Set(docRefText.match(/\b(?:references|templates|scripts|assets)\/[A-Za-z0-9._/-]+/g) || []);
-const orphanFiles = files.filter((rel) => /^(?:references|templates|assets)\//.test(rel) && ![...referencedPaths].some((r) => r === rel || rel.startsWith(`${r}/`)));
+const orphanFiles = generic ? [] : files.filter((rel) => /^(?:references|templates|assets)\//.test(rel) && ![...referencedPaths].some((r) => r === rel || rel.startsWith(`${r}/`)));
 for (const rel of orphanFiles) {
   add("WARNING", "Orphan reference/template file", `${rel} is never mentioned in SKILL.md or README; reference it or remove it.`);
 }
@@ -663,6 +685,7 @@ const report = {
     status,
     readiness: fail.length ? "blocked" : "review_required",
     readmeAudience,
+    profile,
     failed: fail.length,
     warnings: warning.length,
     unresolvedReviewFindings: results.filter(r => r.level === "WARNING" && r.reviewId).length,
@@ -676,13 +699,13 @@ const report = {
   results,
 };
 
-fs.writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+if (!noReport) fs.writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
 
 if (jsonOnly) {
   console.log(JSON.stringify(report, null, 2));
 } else {
   console.log(`Publish check: ${status}`);
-  console.log(`- report: ${path.relative(root, reportPath)}`);
+  console.log(noReport ? "- report: not written (--no-report)" : `- report: ${path.relative(root, reportPath)}`);
 
   for (const level of ["FAIL", "WARNING"]) {
     const items = results.filter((r) => r.level === level);

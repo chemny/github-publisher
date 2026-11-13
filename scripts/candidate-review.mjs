@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 /** Explicit external content-review receipts; never publication authority. */
 import fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { gitFiles } from './git-files.mjs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -18,7 +20,25 @@ export function candidateDigest(root, { reportPath } = {}) {
       else throw new Error('candidate review does not support special files');
     }
   };
-  walk(root);files.sort((a,b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
+  // Git delivery: tracked and visible untracked files, excluding ignored local artifacts.
+  let inGit = false;
+  try { inGit = execFileSync('git',['rev-parse','--show-toplevel'],{cwd:root,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim() === fs.realpathSync(root); } catch {}
+  if (inGit) {
+    for (const rel of gitFiles(root)) {
+      const p = path.join(root, rel);
+      if (p === reportPath) continue;
+      let component = root;
+      for (const name of rel.split('/')) {
+        component = path.join(component, name);
+        if (fs.existsSync(component) && fs.lstatSync(component).isSymbolicLink()) throw new Error('candidate review does not support symlinks');
+      }
+      let stat;
+      try { stat = fs.lstatSync(p); } catch (error) { if (error.code === 'ENOENT') continue; throw error; }
+      if (!stat.isFile()) throw new Error('candidate delivery must contain regular files');
+      files.push([rel, hash(fs.readFileSync(p))]);
+    }
+  } else walk(root);
+  files.sort((a,b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
   return hash(JSON.stringify(files));
 }
 export function loadCandidateReview(root, file, digest) {
